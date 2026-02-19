@@ -1,8 +1,6 @@
 package com.mc.gameengine.app
 
-import android.content.Context
 import android.os.Bundle
-import android.view.SurfaceView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -33,7 +31,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.mc.gameengine.app.ui.theme.GameEngineTheme
 import com.mc.gameengine.engine.compose.GameSceneView
 import com.mc.gameengine.engine.compose.rememberAssetsManager
-import com.mc.gameengine.engine.input.GameInput
 import com.mc.gameengine.engine.render.VirtualResolution
 import com.mc.gameengine.game.assets.registerMainSprites
 import com.mc.gameengine.game.scene.CollisionScene
