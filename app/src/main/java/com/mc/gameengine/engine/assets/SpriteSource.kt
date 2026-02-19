@@ -1,7 +1,6 @@
 package com.mc.gameengine.engine.assets
 
 import androidx.compose.ui.graphics.ImageBitmap
-import com.mc.gameengine.core.math.Vec2
 
 interface SpriteSource {
     val frameWidth: Int

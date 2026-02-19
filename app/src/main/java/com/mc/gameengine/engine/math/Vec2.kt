@@ -1,10 +1,18 @@
-package com.mc.gameengine.core.math
+package com.mc.gameengine.engine.math
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import com.mc.gameengine.engine.math.resolve
-import com.mc.gameengine.engine.render.Pivot
+import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.round
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 data class Vec2(val x: Float, val y: Float) {
 
@@ -12,8 +20,8 @@ data class Vec2(val x: Float, val y: Float) {
         val Zero = Vec2(0f, 0f)
 
         fun fromAngle(angleRadians: Float) = Vec2(
-            x = kotlin.math.cos(angleRadians),
-            y = kotlin.math.sin(angleRadians)
+            x = cos(angleRadians),
+            y = sin(angleRadians)
         )
 
         fun from(value: Float) = Vec2(value, value)
@@ -24,11 +32,10 @@ data class Vec2(val x: Float, val y: Float) {
         )
     }
 
-    fun lerp(to: Vec2, alpha: Float): Vec2 =
-        Vec2(
-            x = x + (to.x - x) * alpha,
-            y = y + (to.y - y) * alpha
-        )
+    fun lerp(to: Vec2, alpha: Float): Vec2 = Vec2(
+        x = x + (to.x - x) * alpha,
+        y = y + (to.y - y) * alpha
+    )
 
 }
 
@@ -56,14 +63,22 @@ fun Vec2.distanceSquaredTo(other: Vec2): Float {
     return dx * dx + dy * dy
 }
 
+fun Vec2.perp(): Vec2 = Vec2(-y, x)
+
+fun Vec2.normalize(): Vec2 {
+    val len = sqrt(x * x + y * y)
+    return if (len == 0f) this else Vec2(x / len, y / len)
+}
+
 fun Vec2.scale(scalarX: Float, scalarY: Float): Vec2 = Vec2(this.x * scalarX, this.y * scalarY)
 
-fun Vec2.rotate(angleRadians: Float): Vec2 {
-    val cosTheta = kotlin.math.cos(angleRadians)
-    val sinTheta = kotlin.math.sin(angleRadians)
+fun Vec2.rotate(angleDegrees: Float): Vec2 {
+    val rad = Math.toRadians(angleDegrees.toDouble())
+    val cosTheta = cos(rad)
+    val sinTheta = sin(rad)
     return Vec2(
-        x = this.x * cosTheta - this.y * sinTheta,
-        y = this.x * sinTheta + this.y * cosTheta
+        x = (this.x.toDouble() * cosTheta - this.y.toDouble() * sinTheta).toFloat(),
+        y = (this.x.toDouble() * sinTheta + this.y.toDouble() * cosTheta).toFloat()
     )
 }
 
@@ -85,11 +100,11 @@ fun Vec2.projectOnto(other: Vec2): Vec2 {
 fun Vec2.perpendicular(): Vec2 = Vec2(-this.y, this.x)
 
 fun Vec2.clamp(min: Vec2, max: Vec2): Vec2 = Vec2(
-    x = kotlin.math.max(min.x, kotlin.math.min(this.x, max.x)),
-    y = kotlin.math.max(min.y, kotlin.math.min(this.y, max.y))
+    x = max(min.x, min(this.x, max.x)),
+    y = max(min.y, min(this.y, max.y))
 )
 
-fun Vec2.length(): Float = kotlin.math.sqrt(x * x + y * y)
+fun Vec2.length(): Float = sqrt(x * x + y * y)
 
 fun Vec2.normalized(): Vec2 {
     val len = length()
@@ -104,10 +119,10 @@ fun Vec2.clamp(radius: Float): Vec2 = if (this.length() > radius) {
     this.normalized() * radius
 } else this
 
-fun Vec2.abs(): Vec2 = Vec2(kotlin.math.abs(this.x), kotlin.math.abs(this.y))
-fun Vec2.floor(): Vec2 = Vec2(kotlin.math.floor(this.x), kotlin.math.floor(this.y))
-fun Vec2.ceil(): Vec2 = Vec2(kotlin.math.ceil(this.x), kotlin.math.ceil(this.y))
-fun Vec2.round(): Vec2 = Vec2(kotlin.math.round(this.x), kotlin.math.round(this.y))
+fun Vec2.abs(): Vec2 = Vec2(abs(this.x), abs(this.y))
+fun Vec2.floor(): Vec2 = Vec2(floor(this.x), floor(this.y))
+fun Vec2.ceil(): Vec2 = Vec2(ceil(this.x), ceil(this.y))
+fun Vec2.round(): Vec2 = Vec2(round(this.x), round(this.y))
 
 fun Vec2.dot(other: Vec2): Float = this.x * other.x + this.y * other.y
 fun Vec2.cross(other: Vec2): Float = this.x * other.y - this.y * other.x
@@ -115,7 +130,7 @@ fun Vec2.angleBetween(other: Vec2): Float {
     val dotProduct = this.dot(other)
     val lengthsProduct = this.length() * other.length()
     return if (lengthsProduct != 0f) {
-        kotlin.math.acos(dotProduct / lengthsProduct)
+        acos(dotProduct / lengthsProduct)
     } else {
         0f
     }
@@ -132,11 +147,3 @@ fun Vec2.toOffset(): Offset = Offset(this.x, this.y)
 fun Offset.toVec2(): Vec2 = Vec2(this.x, this.y)
 fun Vec2.toSize(): Size = Size(this.x, this.y)
 fun Size.toVec2(): Vec2 = Vec2(this.width, this.height)
-
-fun Rect.move(
-    position: Vec2,
-    pivot: Pivot = Pivot.TopLeft
-): Rect = Rect(
-    offset = position.toOffset() - pivot.resolve(this.size),
-    size = this.size
-)

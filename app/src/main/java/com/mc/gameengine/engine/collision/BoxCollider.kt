@@ -1,32 +1,40 @@
 package com.mc.gameengine.engine.collision
 
-import com.mc.gameengine.core.math.Vec2
-import com.mc.gameengine.core.math.minus
-import com.mc.gameengine.core.math.plus
-import com.mc.gameengine.core.math.toSize
-import com.mc.gameengine.core.math.toVec2
-import com.mc.gameengine.engine.core.ColliderId
+import androidx.compose.ui.graphics.Color
+import com.mc.gameengine.engine.compose.RenderDepth
 import com.mc.gameengine.engine.core.Instance
-import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.math.AABB
-import com.mc.gameengine.engine.math.resolve
-import com.mc.gameengine.engine.render.Pivot
+import com.mc.gameengine.engine.math.Vec2
+import com.mc.gameengine.engine.render.Renderer
 
-class BoxCollider(
-    id: ColliderId,
-    owner: Instance,
-    private val offset: Vec2,
-    private val size: Vec2,
-    private val pivot: Pivot = Pivot.TopLeft
-) : Collider(id, owner) {
+open class BoxCollider(
+    override val owner: Instance,
+    val width: Float,
+    val height: Float,
+) : Collider(owner),
+    CollisionCenterDelegate by CollisionCenterDelegateImpl(),
+    CollisionVerticesDelegate by CollisionVerticesDelegateImpl()
+{
 
+    override var state: ColliderState = ColliderState()
 
-
-    override fun bounds(position: Vec2): AABB {
-        val pivotOffset = pivot.resolve(size.toSize()).toVec2()
-        return AABB(
-            position = position + offset - pivotOffset,
-            size = size
+    override fun Renderer.debugDraw() {
+        drawPolygon(
+            position = Vec2.Zero,
+            points = getVertices(),
+            color = Color.Gray.copy(alpha = 0.5f),
+            deep = RenderDepth.DEBUG
         )
     }
+
+    override fun onUpdate() {
+        clearVertices()
+        clearCenter()
+    }
+
+    fun getVertices(): List<Vec2> = computeVertices()
+
+    fun getAxes(): List<Vec2> = computeAxes()
+
+    fun getCenter() = computeCenter()
+
 }

@@ -51,7 +51,7 @@ private fun ShowSpritePreview() {
     val manager = AssetsManager(imageLoader)
     manager.registerMainSprites()
 
-    val sprite = manager.get(SpritesMain.METEOR_DESTRUCTION)  //TODO: Change sprite here for preview
+    val sprite = manager.get(SpritesMain.METEOR_EXPLOSION)  //TODO: Change sprite here for preview
 
     val frame = remember { mutableIntStateOf(0) }
 

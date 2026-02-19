@@ -1,6 +1,8 @@
 package com.mc.gameengine.app
 
+import android.content.Context
 import android.os.Bundle
+import android.view.SurfaceView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,16 +11,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,12 +33,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.mc.gameengine.app.ui.theme.GameEngineTheme
 import com.mc.gameengine.engine.compose.GameSceneView
 import com.mc.gameengine.engine.compose.rememberAssetsManager
-import com.mc.gameengine.engine.compose.rememberInputManager
-import com.mc.gameengine.engine.compose.rememberSensorInputAdapter
-import com.mc.gameengine.engine.compose.rememberTouchProcessor
+import com.mc.gameengine.engine.input.GameInput
 import com.mc.gameengine.engine.render.VirtualResolution
 import com.mc.gameengine.game.assets.registerMainSprites
-import com.mc.gameengine.game.scene.ExampleScene
+import com.mc.gameengine.game.scene.CollisionScene
 import com.mc.gameengine.game.scene.MainScene
 
 class MainActivity : ComponentActivity() {
@@ -45,7 +46,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             GameEngineTheme {
                 Scaffold(Modifier.background(Color.White)) {
-                    ExampleScreen(Modifier.padding(it))
+                    CollisionsScreen(Modifier.padding(it))
                 }
             }
         }
@@ -62,18 +63,24 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun CollisionsScreen(modifier: Modifier) {
+
+    val scene = remember { CollisionScene() }
+
+    GameSceneView(
+        modifier = modifier.fillMaxSize(),
+        scene = scene,
+    )
+}
+
+@Composable
 fun ExampleScreen(modifier: Modifier) {
 
     val assetManager = rememberAssetsManager().registerMainSprites()
-    val input = rememberInputManager()
-    val sensorInputAdapter = rememberSensorInputAdapter(input)
-    val touchProcessor = rememberTouchProcessor(input)
-    val scene = remember { MainScene(assetManager, input) }
+    val scene = remember { MainScene() }
+    var paused by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopEnd
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         GameSceneView(
             modifier = modifier
                 .fillMaxHeight()
@@ -83,16 +90,16 @@ fun ExampleScreen(modifier: Modifier) {
             assetsManager = assetManager,
             virtualResolution = VirtualResolution.LandscapeHD,
             contentScale = ContentScale.Fit,
-            sensorInputAdapter = sensorInputAdapter,
-            touchProcessor = touchProcessor
+            isPaused = paused
         )
 
         FilledTonalIconButton(
-            modifier = Modifier.padding(16.dp),
-            onClick = {}
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.TopEnd),
+            onClick = { paused = !paused }
         ) {
-            Icon(Icons.Default.Clear, null)
+            Icon(Icons.Default.Settings, null)
         }
     }
 }
-

@@ -3,19 +3,19 @@ package com.mc.gameengine.game.instance
 import androidx.compose.ui.graphics.Color
 import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.core.math.Vec2
-import com.mc.gameengine.core.math.clamp
-import com.mc.gameengine.core.math.div
-import com.mc.gameengine.core.math.minus
-import com.mc.gameengine.core.math.plus
-import com.mc.gameengine.core.math.times
+import com.mc.gameengine.engine.math.Vec2
+import com.mc.gameengine.engine.math.clamp
+import com.mc.gameengine.engine.math.div
+import com.mc.gameengine.engine.math.minus
+import com.mc.gameengine.engine.math.plus
+import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.input.AccelerometerEvent
-import com.mc.gameengine.engine.input.InputEvent
-import com.mc.gameengine.engine.input.InputListener
+import com.mc.gameengine.engine.input.SensorEvent
+import com.mc.gameengine.engine.input.SensorListener
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
-class MovingSphere : Instance(), InputListener {
+class MovingSphere : Instance(), SensorListener {
 
     private var sensorState = "State:"
 
@@ -32,7 +32,7 @@ class MovingSphere : Instance(), InputListener {
         current = current.copy(moving.clamp(minMoving, maxMoving))
     }
 
-    override fun onInput(event: InputEvent) {
+    override fun onSensorEvent(event: SensorEvent) {
         when (event) {
             is AccelerometerEvent -> {
                 sensorState = "State: " +

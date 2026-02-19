@@ -1,10 +1,10 @@
 package com.mc.gameengine.engine.input
 
-import com.mc.gameengine.core.math.Vec2
-import com.mc.gameengine.core.math.minus
+import com.mc.gameengine.engine.math.Vec2
+import com.mc.gameengine.engine.math.minus
 
 class TouchProcessor(
-    private val input: InputManager
+    val touchManager: TouchManager
 ) {
     private var downTime = 0L
     private var startPos = Vec2(0f, 0f)
@@ -12,12 +12,11 @@ class TouchProcessor(
     fun onDown(pos: Vec2) {
         downTime = System.currentTimeMillis()
         startPos = pos
-        input.dispatch(PressEvent(pos))
-
+        touchManager.dispatch(PressEvent(pos))
     }
 
     fun onMove(pos: Vec2) {
-        input.dispatch(
+        touchManager.dispatch(
             DragEvent(
                 start = startPos,
                 current = pos,
@@ -26,15 +25,15 @@ class TouchProcessor(
         )
     }
 
-    fun onStop() = input.dispatch(StopDragEvent)
+    fun onStop() = touchManager.dispatch(StopDragEvent)
 
     fun onUp(pos: Vec2) {
         val duration = (System.currentTimeMillis() - downTime) / 1000f
 
         if (duration > 0.4f) {
-            input.dispatch(LongPressEvent(pos, duration))
+            touchManager.dispatch(LongPressEvent(pos, duration))
         } else {
-            input.dispatch(TapEvent(pos))
+            touchManager.dispatch(TapEvent(pos))
         }
     }
 }

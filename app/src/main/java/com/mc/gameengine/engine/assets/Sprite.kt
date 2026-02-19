@@ -1,10 +1,10 @@
 package com.mc.gameengine.engine.assets
 
-import com.mc.gameengine.core.rendering.SpriteDefinition
 import com.mc.gameengine.engine.core.SpriteId
 
-class Sprite(
+open class Sprite(
     private val sprite: SpriteDefinition,
+    var metrics: SpriteMetrics,
     var endFrame: Int = sprite.totalFrames,
     var startFrame: Int = 0,
     var frameDuration: Float = 0.1f
@@ -17,7 +17,7 @@ class Sprite(
 
     val spriteId get() = sprite.spriteId
 
-    fun update(dt: Float) {
+    fun animate(dt: Float) {
         if (inMovement) timer += dt
         if (timer >= frameDuration) {
             timer = 0f
@@ -27,6 +27,10 @@ class Sprite(
                 currentFrame = startFrame
             }
         }
+    }
+
+    fun update(block: (SpriteMetrics) -> SpriteMetrics) {
+        metrics = block(metrics)
     }
 
     fun spriteIs(id: SpriteId) = id == sprite.spriteId
@@ -41,3 +45,4 @@ class Sprite(
         inMovement = true
     }
 }
+

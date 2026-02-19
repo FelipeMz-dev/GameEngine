@@ -1,7 +1,7 @@
 package com.mc.gameengine.game.assets
 
 import com.mc.gameengine.R
-import com.mc.gameengine.core.rendering.AtlasSpriteDef
+import com.mc.gameengine.engine.assets.AtlasSpriteDef
 import com.mc.gameengine.engine.core.SpriteId
 
 object SpritesDinoPlayer {

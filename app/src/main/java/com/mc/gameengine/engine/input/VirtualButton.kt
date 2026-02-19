@@ -3,7 +3,7 @@ package com.mc.gameengine.engine.input
 data class VirtualButton(
     private val id: String,
     private val pressed: Boolean,
-    private val input: InputManager
+    private val input: TouchManager
 ) {
     fun onPress() {
         input.dispatch(

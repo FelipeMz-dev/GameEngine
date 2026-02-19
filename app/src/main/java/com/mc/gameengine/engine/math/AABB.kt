@@ -1,7 +1,5 @@
 package com.mc.gameengine.engine.math
 
-import com.mc.gameengine.core.math.Vec2
-
 data class AABB(
     val position: Vec2,
     val size: Vec2

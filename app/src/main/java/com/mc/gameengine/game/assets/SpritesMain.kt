@@ -1,8 +1,8 @@
 package com.mc.gameengine.game.assets
 
 import com.mc.gameengine.R
-import com.mc.gameengine.core.rendering.AtlasSpriteDef
-import com.mc.gameengine.core.rendering.SingleImageSpriteDef
+import com.mc.gameengine.engine.assets.AtlasSpriteDef
+import com.mc.gameengine.engine.assets.SingleImageSpriteDef
 
 object SpritesMain {
     const val EXAMPLE = "example"
@@ -11,6 +11,7 @@ object SpritesMain {
     const val METEOR_EXPLOSION = "meteorExplosion"
     const val METEOR_DESTRUCTION = "meteorDestruction"
     const val BACKGROUND = "backIsland"
+    const val FOREGROUND = "foreIsland"
 
     val example = AtlasSpriteDef(
         spriteId = EXAMPLE,
@@ -50,12 +51,10 @@ object SpritesMain {
     val meteorExplosion = AtlasSpriteDef(
         spriteId = METEOR_EXPLOSION,
         resId = R.drawable.explosion_meteor,
-        spriteWidth = 256,
-        spriteHeight = 214,
+        spriteWidth = 214,
+        spriteHeight = 178,
         columns = 3,
-        rows = 4,
-        offsetX = 12,
-        offsetY = 0,
+        rows = 3,
     )
 
     val meteorDestruction = AtlasSpriteDef(
@@ -75,11 +74,17 @@ object SpritesMain {
         resId = R.drawable.background_island
     )
 
+    val foreground = SingleImageSpriteDef(
+        spriteId = FOREGROUND,
+        resId = R.drawable.foreground_island
+    )
+
     val entries = listOf(
         example,
         volcano,
         meteor,
         background,
+        foreground,
         meteorExplosion,
         meteorDestruction
     )

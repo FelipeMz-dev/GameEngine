@@ -1,21 +1,13 @@
 package com.mc.gameengine.game.scene
 
-import com.mc.gameengine.core.math.Vec2
-import com.mc.gameengine.core.math.toSize
-import com.mc.gameengine.engine.assets.AssetsManager
 import com.mc.gameengine.engine.core.GameScene
-import com.mc.gameengine.game.instance.Dinosaur
-import com.mc.gameengine.engine.input.InputManager
 import com.mc.gameengine.engine.render.Renderer
 import com.mc.gameengine.game.assets.SpritesMain
+import com.mc.gameengine.game.instance.Dinosaur
 import com.mc.gameengine.game.instance.Meteor
-import kotlin.properties.Delegates
 import kotlin.random.Random
 
-class MainScene(
-    assets: AssetsManager,
-    input: InputManager
-) : GameScene(input, assets) {
+class MainScene: GameScene() {
 
     private var randomPosition = 0
     private var spawnDuration = 0
@@ -28,7 +20,7 @@ class MainScene(
 
     override fun update(dt: Float) {
         super.update(dt)
-        spawnTimer = spawnTimer + dt
+        spawnTimer += dt
         if (spawnTimer > spawnDuration) {
             spawnDuration = Random.nextInt(2, 10)
             spawnTimer = 0f
@@ -38,11 +30,8 @@ class MainScene(
     }
 
     override fun render(renderer: Renderer, alpha: Float) {
-        renderer.drawImage(
-            SpritesMain.BACKGROUND,
-            position = Vec2.Zero,
-            size = viewportSize().toSize()
-        )
+        renderer.drawBackground(SpritesMain.BACKGROUND)
+        renderer.drawForeground(SpritesMain.FOREGROUND)
         super.render(renderer, alpha)
     }
 }

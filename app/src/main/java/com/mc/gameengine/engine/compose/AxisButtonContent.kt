@@ -16,32 +16,32 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mc.gameengine.core.math.Vec2
-import com.mc.gameengine.core.math.clamp
-import com.mc.gameengine.core.math.plus
-import com.mc.gameengine.core.math.toOffset
+import com.mc.gameengine.engine.math.Vec2
+import com.mc.gameengine.engine.math.clamp
+import com.mc.gameengine.engine.math.plus
+import com.mc.gameengine.engine.math.toOffset
 import com.mc.gameengine.engine.input.AxisEvent
-import com.mc.gameengine.engine.input.InputManager
+import com.mc.gameengine.engine.input.TouchManager
 import com.mc.gameengine.engine.input.VirtualAxis
 
 @Composable
 fun AxisButtonContent(
     modifier: Modifier,
     id: String,
-    radius: Float,
-    input: InputManager,
-    color: Color = Color.Companion.Red
+    radius: Dp,
+    touchManager: TouchManager,
+    color: Color = Color.Red
 ) {
     val density = LocalDensity.current
-    val radiusPx = with(density) { radius.dp.toPx() }
-
-    val virtualAxis = remember(radiusPx, id, input) {
+    val radiusPx = remember(radius) { with(density) { radius.toPx() } }
+    val virtualAxis = remember(radiusPx, id, touchManager) {
         VirtualAxis(
             id = id,
             center = Vec2(radiusPx, radiusPx),
             radius = radiusPx,
-            input = input
+            input = touchManager
         )
     }
 
@@ -51,7 +51,7 @@ fun AxisButtonContent(
 
     Box(
         modifier = modifier
-            .size((radius * 2).dp)
+            .size(radius.times(2))
             .border(1.dp, color, CircleShape)
             .background(color.copy(alpha = 0.3f), CircleShape)
             .pointerInput(Unit) {
@@ -67,7 +67,7 @@ fun AxisButtonContent(
                         virtualAxis.onDrag(Vec2(change.position.x, change.position.y))
                     },
                     onDragEnd = {
-                        input.dispatch(
+                        touchManager.dispatch(
                             AxisEvent(
                                 id = id,
                                 value = Vec2(0f, 0f)

@@ -1,4 +1,4 @@
-package com.mc.gameengine.core.rendering
+package com.mc.gameengine.engine.assets
 
 import com.mc.gameengine.engine.core.SpriteId
 

@@ -1,10 +1,6 @@
 package com.mc.gameengine.engine.assets
 
-import com.mc.gameengine.core.math.Vec2
-import com.mc.gameengine.core.rendering.AtlasSpriteDef
-import com.mc.gameengine.core.rendering.FrameListSpriteDef
-import com.mc.gameengine.core.rendering.SingleImageSpriteDef
-import com.mc.gameengine.core.rendering.SpriteDefinition
+import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.core.SpriteId
 import com.mc.gameengine.engine.render.ImageLoader
 

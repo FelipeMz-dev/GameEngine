@@ -1,6 +1,6 @@
 package com.mc.gameengine.engine.physics
 
-import com.mc.gameengine.core.math.Vec2
+import com.mc.gameengine.engine.math.Vec2
 
 data class PhysicsState(
     var velocity: Vec2 = Vec2(0f, 0f),

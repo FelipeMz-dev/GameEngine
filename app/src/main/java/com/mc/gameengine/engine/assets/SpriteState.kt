@@ -1,7 +1,5 @@
 package com.mc.gameengine.engine.assets
 
-import com.mc.gameengine.core.rendering.SpriteDefinition
-
 data class SpriteState(
     val sprite: SpriteDefinition,
     val endFrame: Int = sprite.totalFrames,
