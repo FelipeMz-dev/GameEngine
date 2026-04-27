@@ -26,12 +26,19 @@ abstract class GameScene() : WorldContext {
 
     private val entities = SceneEntityManager()
     private val collisionSystem = CollisionSystem()
+    private val lifecycleDispatcher = SceneLifecycleDispatcher()
+    private val fixedStepDispatcher = SceneFixedStepDispatcher()
+
+    init {
+        fixedStepDispatcher.register(CollisionSystem::class.java) {
+            collisionSystem.check()
+        }
+    }
 
     protected var camera: Camera2D? = null
     private lateinit var spriteManager: SpriteManager
     private lateinit var audioManager: AudioManager
     private lateinit var gameInput: GameInput
-    private val lifecycleDispatcher = SceneLifecycleDispatcher()
 
     override val audioPlayer: AudioPlayer
         get() = audioManager
@@ -101,6 +108,9 @@ abstract class GameScene() : WorldContext {
             onAdded = gameInput::register,
             onRemoved = gameInput::unregister
         )
+        fixedStepDispatcher.register(GameInput::class.java) { dt ->
+            gameInput.keyboardProcessor?.update(dt)
+        }
     }
 
     fun attachCamera2D(camera: Camera2D) {
@@ -158,8 +168,7 @@ abstract class GameScene() : WorldContext {
             it.snapshot()
             it.fixedUpdate(dt)
         }
-        gameInput.keyboardProcessor?.update(dt)
-        collisionSystem.check()
+        fixedStepDispatcher.dispatch(dt)
     }
 
     open fun render(
