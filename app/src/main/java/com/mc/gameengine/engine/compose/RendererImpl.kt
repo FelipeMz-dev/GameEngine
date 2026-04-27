@@ -24,9 +24,6 @@ import com.mc.gameengine.engine.math.toOffset
 import com.mc.gameengine.engine.math.toSize
 import com.mc.gameengine.engine.math.toVec2
 import com.mc.gameengine.engine.assets.SpriteManager
-import com.mc.gameengine.engine.assets.AtlasSprite
-import com.mc.gameengine.engine.assets.FrameListSprite
-import com.mc.gameengine.engine.assets.SingleImageSprite
 import com.mc.gameengine.engine.assets.Sprite
 import com.mc.gameengine.engine.core.SpriteId
 import com.mc.gameengine.engine.core.TransformState
@@ -295,12 +292,7 @@ class RendererImpl(
         color: Color,
         blendMode: BlendMode
     ) {
-        val img = when (val sprite = spriteManager.get(spriteId)) {
-            is AtlasSprite -> sprite.image
-            is FrameListSprite -> sprite.images.getOrNull(frame % sprite.images.size)
-            is SingleImageSprite -> sprite.image
-            else -> null
-        }
+        val img = spriteManager.get(spriteId).frameAt(frame)
 
         img?.also {
             commands += RenderCommand(deep) {

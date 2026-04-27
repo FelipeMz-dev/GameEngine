@@ -50,9 +50,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.mc.gameengine.R
 import com.mc.gameengine.app.ui.theme.GameEngineTheme
-import com.mc.gameengine.engine.assets.AtlasSprite
-import com.mc.gameengine.engine.assets.FrameListSprite
-import com.mc.gameengine.engine.assets.SingleImageSprite
 import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.compose.GameSceneView
 import com.mc.gameengine.engine.compose.rememberAudioManager
@@ -156,12 +153,7 @@ private fun IconPower(
     onFinalized: () -> Unit
 ){
     val imageSprite = remember(itemPower.type) {
-        when (val source = spriteManager.get(itemPower.type.sprite.spriteId)) {
-            is AtlasSprite -> source.image
-            is FrameListSprite -> source.images.firstOrNull()
-            is SingleImageSprite -> source.image
-            else -> null
-        }
+        spriteManager.get(itemPower.type.sprite.spriteId).firstFrame()
     } ?: return
 
     Image(

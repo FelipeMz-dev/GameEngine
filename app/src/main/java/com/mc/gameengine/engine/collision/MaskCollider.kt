@@ -2,9 +2,6 @@ package com.mc.gameengine.engine.collision
 
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
-import com.mc.gameengine.engine.assets.AtlasSprite
-import com.mc.gameengine.engine.assets.FrameListSprite
-import com.mc.gameengine.engine.assets.SingleImageSprite
 import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.assets.SpriteSource
 import com.mc.gameengine.engine.compose.RenderDepth
@@ -86,12 +83,7 @@ class MaskCollider(
             val spriteHeight = source.frameHeight
             val spriteWidth = source.frameWidth
             val buffer = IntArray(spriteWidth * spriteHeight)
-            when (source) {
-                is AtlasSprite -> (source as AtlasSprite).image
-                is FrameListSprite -> (source as FrameListSprite).images[frame]
-                is SingleImageSprite -> (source as SingleImageSprite).image
-                else -> null
-            }?.readPixels(
+            source.frameAt(frame)?.readPixels(
                 buffer = buffer,
                 width = spriteWidth,
                 height = spriteHeight

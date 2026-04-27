@@ -19,7 +19,7 @@ class SpriteManager(private val imageLoader: ImageLoader) {
 
     fun get(id: SpriteId): SpriteSource = sprites[id] ?: error("Sprite '$id' not found")
 
-    private fun loadAtlas(def: AtlasSpriteDef) {
+    private fun loadAtlas(def: AtlasSpriteDef): SpriteSource {
         val images = mutableListOf<ImageBitmap>()
         val frameSize = def.resolvedFrameSize
         require(frameSize.x > 0f && frameSize.y > 0f) {
@@ -43,10 +43,10 @@ class SpriteManager(private val imageLoader: ImageLoader) {
             images.add(image)
         }
 
-        sprites[def.spriteId] = FrameListSprite(images)
+        return FrameListSprite(images)
     }
 
-    private fun loadFrameList(def: FrameListSpriteDef) {
+    private fun loadFrameList(def: FrameListSpriteDef): SpriteSource {
         val images = def.resIds.map {
             imageLoader.loadRes(
                 resId = it,
@@ -56,17 +56,17 @@ class SpriteManager(private val imageLoader: ImageLoader) {
             )
         }
 
-        sprites[def.spriteId] = FrameListSprite(images)
+        return FrameListSprite(images)
     }
 
-    private fun loadSingleImage(def: SingleImageSpriteDef) {
+    private fun loadSingleImage(def: SingleImageSpriteDef): SpriteSource {
         val image = imageLoader.loadRes(
             resId = def.resId,
             hasAlpha = def.hasAlpha,
             srcOffset = def.srcOffset,
             srcSize = def.srcSize
         )
-        sprites[def.spriteId] = SingleImageSprite(image)
+        return SingleImageSprite(image)
     }
 
     fun getSize(id: SpriteId): Vec2 {
@@ -78,11 +78,10 @@ class SpriteManager(private val imageLoader: ImageLoader) {
     }
 
     private fun SpriteDefinition.toSource(): SpriteSource {
-        when (this) {
+        return when (this) {
             is AtlasSpriteDef -> loadAtlas(this)
             is FrameListSpriteDef -> loadFrameList(this)
             is SingleImageSpriteDef -> loadSingleImage(this)
         }
-        return get(spriteId)
     }
 }
