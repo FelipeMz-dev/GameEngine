@@ -1,15 +1,17 @@
 package com.mc.gameengine.engine.input.touch
 
+import com.mc.gameengine.engine.input.ListenerRegistry
+
 class TouchManager {
 
-    private val listeners = mutableSetOf<TouchListener>()
+    private val listeners = ListenerRegistry<TouchListener>()
 
     fun register(listener: TouchListener) {
-        listeners += listener
+        listeners.add(listener)
     }
 
     fun unregister(listener: TouchListener) {
-        listeners -= listener
+        listeners.remove(listener)
     }
 
     fun dispatch(event: TouchEvent) {

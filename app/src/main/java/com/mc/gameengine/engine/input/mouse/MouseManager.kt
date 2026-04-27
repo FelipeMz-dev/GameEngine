@@ -1,19 +1,20 @@
 package com.mc.gameengine.engine.input.mouse
 
+import com.mc.gameengine.engine.input.ListenerRegistry
+
 class MouseManager {
 
-    private val mouseListeners = mutableListOf<MouseListener>()
+    private val listeners = ListenerRegistry<MouseListener>()
 
     fun register(listener: MouseListener) {
-        mouseListeners += listener
+        listeners.add(listener)
     }
 
     fun unregister(listener: MouseListener) {
-        mouseListeners -= listener
+        listeners.remove(listener)
     }
 
     fun dispatchEvent(event: MouseEvent) {
-        mouseListeners.forEach { it.onMouseEvent(event) }
+        listeners.forEach { it.onMouseEvent(event) }
     }
-
 }
