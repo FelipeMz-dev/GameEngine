@@ -2,10 +2,11 @@ package com.mc.gameengine.engine.math
 
 import com.mc.gameengine.engine.collision.BoxCollider
 import com.mc.gameengine.engine.collision.EllipseCollider
+import com.mc.gameengine.engine.collision.MaskCollider
 import com.mc.gameengine.engine.collision.PolygonalCollider
 import kotlin.collections.plus
 
-internal class IntersectionUtil {
+internal object IntersectionUtil {
 
     fun ovalOval(a: EllipseCollider, b: EllipseCollider): Boolean {
         val centerDiff = b.getCenter() - a.getCenter()
@@ -87,7 +88,7 @@ internal class IntersectionUtil {
 
         for (axis in axes) {
             val pa = project(polygonVertices, axis)
-            val pb = project(box.getVertices(), axis)
+            val pb = project(boxVertices, axis)
             if (!overlap(pa, pb)) return false
         }
         return true
@@ -107,22 +108,6 @@ internal class IntersectionUtil {
             )
         }
 
-        fun pointInPolygon(point: Vec2, verts: List<Vec2>): Boolean {
-            var inside = false
-            var j = verts.size - 1
-            for (i in verts.indices) {
-                val vi = verts[i]
-                val vj = verts[j]
-                if (((vi.y > point.y) != (vj.y > point.y)) &&
-                    (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x)
-                ) {
-                    inside = !inside
-                }
-                j = i
-            }
-            return inside
-        }
-
         if (pointInPolygon(Vec2.Zero, transformed)) return true
 
         var minDistSq = Float.MAX_VALUE
@@ -138,6 +123,67 @@ internal class IntersectionUtil {
         }
 
         return minDistSq <= 1f
+    }
+
+    fun polygonMask(polygon: PolygonalCollider, mask: MaskCollider): Boolean {
+        val buffer = mask.getBuffer() ?: return false
+        val polygonVertices = polygon.getVertices().ifEmpty { return false }
+
+        buffer.forEach {
+            if (pointInPolygon(it, polygonVertices)) return true
+        }
+        return false
+    }
+
+    fun boxMask(box: BoxCollider, mask: MaskCollider): Boolean {
+        val buffer = mask.getBuffer() ?: return false
+        val boxVertices = box.getVertices().ifEmpty { return false }
+
+        buffer.forEach {
+            if (pointInPolygon(it, boxVertices)) return true
+        }
+        return false
+    }
+
+    fun ovalMask(oval: EllipseCollider, mask: MaskCollider): Boolean {
+        val buffer = mask.getBuffer() ?: return false
+        val ovalCenter = oval.getCenter()
+
+        buffer.forEach {
+            val p = (it - ovalCenter).rotate(-oval.state.angle)
+            val dx = p.x / (oval.radius.x * oval.state.scale.x)
+            val dy = p.y / (oval.radius.y * oval.state.scale.y)
+            if ((dx * dx) + (dy * dy) <= 1f) return true
+        }
+        return false
+    }
+
+    fun maskMask(a: MaskCollider, b: MaskCollider): Boolean {
+        val bufferA = a.getBuffer() ?: return false
+        val bufferB = b.getBuffer() ?: return false
+
+        bufferA.forEachIndexed { indexA, a ->
+            if (indexA % 2 == 0) bufferB.forEachIndexed { indexB, b ->
+                if (indexB % 2 == 0) if (a.distanceSquaredTo(b) <= 2f) return true
+            }
+        }
+        return false
+    }
+
+    private fun pointInPolygon(point: Vec2, verts: List<Vec2>): Boolean {
+        var inside = false
+        var j = verts.size - 1
+        for (i in verts.indices) {
+            val vi = verts[i]
+            val vj = verts[j]
+            if (((vi.y > point.y) != (vj.y > point.y)) &&
+                (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x)
+            ) {
+                inside = !inside
+            }
+            j = i
+        }
+        return inside
     }
 
     private fun overlap(a: Projection, b: Projection): Boolean = a.max >= b.min && b.max >= a.min

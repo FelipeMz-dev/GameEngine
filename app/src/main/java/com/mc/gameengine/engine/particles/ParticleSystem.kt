@@ -14,17 +14,19 @@ abstract class ParticleSystem(
 
     private val particles = mutableListOf<Particle>()
 
+    val hasParticle get() = particles.isNotEmpty()
+
     fun emit(position: Vec2, count: Int) {
         repeat(count) {
             if (particles.size >= maxParticles) return
 
             val speed = config.speed.random()
             val life = config.life.random()
-            val scale = config.scale.random()
             val rotation = config.rotation.random()
             val color = config.color.random()
             val angle = config.angle.random()
             val direction = config.direction.random()
+            val scale = Vec2.from(config.scale.random())
             val velocity = Vec2.fromAngle(Random.nextFloat() * direction) * speed
 
             val particle = Particle(
@@ -42,7 +44,7 @@ abstract class ParticleSystem(
         }
     }
 
-    fun update(dt: Float) {
+    open fun update(dt: Float) {
         val it = particles.iterator()
         while (it.hasNext()) {
             val p = it.next()

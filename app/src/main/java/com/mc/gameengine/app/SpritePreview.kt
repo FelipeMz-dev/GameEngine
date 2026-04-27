@@ -1,13 +1,17 @@
 package com.mc.gameengine.app
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,131 +27,220 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.mc.gameengine.engine.assets.AssetsManager
-import com.mc.gameengine.engine.assets.AtlasSprite
+import com.mc.gameengine.core.time.GameTime
+import com.mc.gameengine.core.time.TimeConfig
+import com.mc.gameengine.engine.assets.AtlasSpriteDef
 import com.mc.gameengine.engine.assets.FrameListSprite
-import com.mc.gameengine.engine.render.ImageLoader
-import com.mc.gameengine.engine.assets.SingleImageSprite
+import com.mc.gameengine.engine.assets.FrameListSpriteDef
 import com.mc.gameengine.engine.assets.ImageLoaderImpl
-import com.mc.gameengine.game.assets.SpritesDinoPlayer
+import com.mc.gameengine.engine.assets.SpriteDefinition
+import com.mc.gameengine.engine.assets.SpriteManager
+import com.mc.gameengine.engine.compose.drawSpriteInternal
+import com.mc.gameengine.engine.core.TransformState
+import com.mc.gameengine.engine.render.ImageLoader
 import com.mc.gameengine.game.assets.SpritesMain
-import com.mc.gameengine.game.assets.registerMainSprites
-import kotlinx.coroutines.delay
 
-@Preview(showBackground = true, device = "id:tv_4k")
+@Preview(device = "id:tv_4k")
 @Composable
-private fun ShowSpritePreview() {
+fun Preview() {
+    SpritePreview(SpritesMain.portal)
+}
 
-    val resources = LocalResources.current
-    val imageLoader: ImageLoader = ImageLoaderImpl(resources)
-    val manager = AssetsManager(imageLoader)
-    manager.registerMainSprites()
-
-    val sprite = manager.get(SpritesMain.METEOR_EXPLOSION)  //TODO: Change sprite here for preview
-
+@Composable
+fun SpritePreview(def: SpriteDefinition) {
     val frame = remember { mutableIntStateOf(0) }
 
-    val totalFrames = when (sprite) {
-        is AtlasSprite -> sprite.columns * sprite.rows
-        is FrameListSprite -> sprite.frames.size
-        else -> 1
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .background(Color.White),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        when (def) {
+            is AtlasSpriteDef -> ContentAnimationAtlas(
+                def = def,
+                frame = frame.intValue
+            )
+
+            is FrameListSpriteDef -> ContentAnimationFrameList(
+                def = def,
+                frame = frame.intValue
+            )
+
+            else -> Unit
+        }
+
+        ContentPreviewAnimation(
+            def = def,
+            frame = frame
+        )
+    }
+}
+
+@Composable
+private fun ContentPreviewAnimation(
+    def: SpriteDefinition,
+    frame: MutableIntState
+) {
+    val resources = LocalResources.current
+    val density = LocalDensity.current
+    var showAnimation by remember { mutableStateOf(false) }
+    val manager = remember(resources) {
+        val imageLoader: ImageLoader = ImageLoaderImpl(resources)
+        SpriteManager(imageLoader).apply { load(def) }
+    }
+    val sprite: FrameListSprite? = remember(manager, def.spriteId) {
+        runCatching {
+            manager.get(def.spriteId) as? FrameListSprite
+        }.getOrNull()
     }
 
-    FrameIncrementer(
+    if (sprite == null) {
+        Text("Sprite not found: ${def.spriteId}")
+        return
+    }
+
+    val frameWidth = def.srcSize?.x ?: sprite.frameWidth.toFloat()
+    val frameHeight = def.srcSize?.y ?: sprite.frameHeight.toFloat()
+    val frameWidthDp = density.run { (frameWidth * 2).toDp() }
+    val frameHeightDp = density.run { (frameHeight * 2).toDp() }
+
+    if (showAnimation) FrameIncrementer(
         frame = frame,
-        duration = 0.1f,
-        totalFrames = totalFrames,
+        speed = 0.05f,
+        totalFrames = def.totalFrames
     )
 
-    when (sprite) {
-        is AtlasSprite -> ContentAnimationAtlas(
-            atlasSprite = sprite,
-            frame = frame.intValue
-        )
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        CheckboxText(
+            text = "Show Animation",
+            checked = showAnimation,
+        ) { showAnimation = it }
 
-        is FrameListSprite -> ContentAnimationFrameList(
-            frameListSprite = sprite,
-            frame = frame.intValue
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalButton(
+                onClick = { frame.intValue = (frame.intValue - 1).coerceAtLeast(0) }
+            ) { Text("<") }
 
-        is SingleImageSprite -> {
-            ContentImageSprite(sprite = sprite)
+            Text("Frame: ${frame.intValue + 1}")
+
+            FilledTonalButton(
+                onClick = { frame.intValue = (frame.intValue + 1) % def.totalFrames }
+            ) { Text(">") }
+        }
+
+        Canvas(
+            modifier = Modifier
+                .width(frameWidthDp)
+                .height(frameHeightDp)
+                .drawBackgroundSquares()
+        ) {
+            withTransform({ scale(2f, 2f, Offset.Zero) }) {
+                drawSpriteInternal(
+                    image = sprite.images[frame.intValue],
+                    state = TransformState(),
+                    colorFilter = ColorFilter.tint(
+                        color = Color.White,
+                        blendMode = BlendMode.Modulate
+                    )
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ContentImageSprite(sprite: SingleImageSprite) {
-
-    val density = LocalDensity.current
-
-    Canvas(
-        modifier = Modifier.Companion
-            .width(density.run { (sprite.spriteWidth).toDp() })
-            .height(density.run { (sprite.spriteHeight).toDp() })
-            .drawBackgroundSquares()
-    ) {
-        drawImage(
-            image = sprite.image,
-            srcOffset = IntOffset(sprite.offsetX, sprite.offsetY),
-            srcSize = IntSize(sprite.spriteWidth, sprite.spriteHeight),
-        )
-    }
-}
-
-@Composable
 private fun ContentAnimationFrameList(
-    frameListSprite: FrameListSprite,
+    def: FrameListSpriteDef,
     frame: Int
 ) {
-    var showAnimation by remember { mutableStateOf(true) }
-    val maxWidth = frameListSprite.frames.maxOf { it.width }
-    val maxHeight = frameListSprite.frames.maxOf { it.height }
+    val resources = LocalResources.current
     val density = LocalDensity.current
+    var showAnimation by remember { mutableStateOf(true) }
 
-    Column(
-        modifier = Modifier.Companion.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        CheckboxText(
-            text = "Animation",
-            checked = showAnimation,
-        ) { showAnimation = it }
-
-        Canvas(
-            modifier = Modifier.Companion
-                .width(density.run { (maxWidth).toDp() })
-                .height(density.run { (maxHeight).toDp() })
-                .drawBackgroundSquares()
-        ) {
-            drawImage(
-                image = frameListSprite.frames[if (showAnimation) frame else 0],
-                srcOffset = IntOffset(frameListSprite.offsetX, frameListSprite.offsetY),
-                srcSize = IntSize(frameListSprite.spriteWidth, frameListSprite.spriteHeight),
+    val images = remember(def.resIds) {
+        val imageLoader = ImageLoaderImpl(resources)
+        def.resIds.map {
+            imageLoader.loadRes(
+                resId = it,
+                hasAlpha = def.hasAlpha,
             )
+        }
+    }
+
+    if (images.isEmpty()) {
+        Text("No images in FrameListSprite")
+        return
+    }
+
+    val maxWidth = images.first().width
+    val maxHeight = images.first().height
+
+    FlowColumn(
+        modifier = Modifier.padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        images.forEach {
+            Canvas(
+                modifier = Modifier
+                    .width(density.run { it.width.toDp() })
+                    .height(density.run { it.height.toDp() })
+                    .drawBackgroundSquares()
+            ) {
+                withTransform({ scale(2f, 2f, Offset.Zero) }) {
+                    drawImage(image = it)
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun ContentAnimationAtlas(
-    atlasSprite: AtlasSprite,
+    def: AtlasSpriteDef,
     frame: Int
 ) {
+    val resources = LocalResources.current
     val density = LocalDensity.current
     var showGrid by remember { mutableStateOf(true) }
-    var showAnimation by remember { mutableStateOf(true) }
+    val spacingX = def.srcSpacing?.x ?: 0f
+    val spacingY = def.srcSpacing?.y ?: 0f
+
+    val image = remember(def.resId, def.hasAlpha) {
+        ImageLoaderImpl(resources).loadRes(
+            resId = def.resId,
+            hasAlpha = def.hasAlpha,
+        )
+    }
+
+    val frameWidth = def.srcSize?.x ?: 0f
+    val frameHeight = def.srcSize?.y ?: 0f
+
+    val size = Size(
+        width = frameWidth,
+        height = frameHeight
+    )
+    val width = image.width * 2
+    val height = image.height * 2
 
     Column(
-        modifier = Modifier.Companion.padding(16.dp),
+        modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         CheckboxText(
@@ -156,56 +249,31 @@ private fun ContentAnimationAtlas(
         ) { showGrid = it }
 
         Canvas(
-            modifier = Modifier.Companion
-                .width(density.run { (atlasSprite.image.width).toDp() })
-                .height(density.run { (atlasSprite.image.height).toDp() })
+            modifier = Modifier
+                .width(density.run { width.toDp() })
+                .height(density.run { height.toDp() })
                 .drawBackgroundSquares()
         ) {
-            drawImage(image = atlasSprite.image)
+            withTransform({ scale(2f, 2f, Offset.Zero) }) {
+                drawImage(image = image)
 
-            if (showGrid) {
-                repeat(atlasSprite.rows) { row ->
-                    repeat(atlasSprite.columns) { column ->
-                        val topLeft = Offset(
-                            x = atlasSprite.offsetX + column * (atlasSprite.spriteWidth + atlasSprite.spacingX).toFloat(),
-                            y = atlasSprite.offsetY + row * (atlasSprite.spriteHeight + atlasSprite.spacingY).toFloat()
-                        )
-                        drawRect(
-                            color = Color.Companion.Black,
-                            topLeft = topLeft,
-                            size = Size(
-                                atlasSprite.spriteWidth.toFloat(),
-                                atlasSprite.spriteHeight.toFloat()
-                            ),
-                            style = Stroke(width = 1f)
-                        )
+                if (showGrid) {
+                    repeat(def.rows) { row ->
+                        repeat(def.columns) { column ->
+                            val topLeft = Offset(
+                                x = (def.srcOffset?.x ?: 0f) + column * (size.width + spacingX),
+                                y = (def.srcOffset?.y ?: 0f) + row * (size.height + spacingY)
+                            )
+                            drawRect(
+                                color = Color.Black,
+                                topLeft = topLeft,
+                                size = size,
+                                style = Stroke(width = 1f)
+                            )
+                        }
                     }
                 }
             }
-        }
-
-        CheckboxText(
-            text = "Show Animation",
-            checked = showAnimation,
-        ) { showAnimation = it }
-
-        Canvas(
-            modifier = Modifier.Companion
-                .width(with(LocalDensity.current) { (atlasSprite.spriteWidth).toDp() })
-                .height(with(LocalDensity.current) { (atlasSprite.spriteHeight).toDp() })
-                .drawBackgroundSquares()
-        ) {
-            val srcOffset = if (showAnimation) {
-                IntOffset(
-                    x = atlasSprite.offsetX + (frame % atlasSprite.columns) * (atlasSprite.spriteWidth + atlasSprite.spacingX),
-                    y = atlasSprite.offsetY + (frame / atlasSprite.columns) * (atlasSprite.spriteHeight + atlasSprite.spacingY)
-                )
-            } else IntOffset(atlasSprite.offsetX, atlasSprite.offsetY)
-            drawImage(
-                atlasSprite.image,
-                srcOffset = srcOffset,
-                srcSize = IntSize(atlasSprite.spriteWidth, atlasSprite.spriteHeight),
-            )
         }
     }
 }
@@ -216,7 +284,7 @@ private fun CheckboxText(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Row(verticalAlignment = Alignment.Companion.CenterVertically) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Checkbox(
             checked = checked,
             onCheckedChange = onCheckedChange
@@ -229,24 +297,28 @@ private fun CheckboxText(
 @Composable
 private fun FrameIncrementer(
     frame: MutableIntState,
-    duration: Float,
+    speed: Float = 0.1f,
     totalFrames: Int,
 ) {
-    LaunchedEffect(Unit) {
+    val gameTime = remember { GameTime() }
+    LaunchedEffect(totalFrames) {
+        if (totalFrames <= 0) return@LaunchedEffect
         while (true) {
             withFrameNanos {
-                frame.intValue++
-                if (frame.intValue >= totalFrames) {
-                    frame.intValue = 0
+                gameTime.fixedUpdate(it)
+                while (gameTime.accumulator >= TimeConfig.FIXED_DELTA_60) {
+                    gameTime.accumulator -= TimeConfig.FIXED_DELTA_60
+                }
+                if (gameTime.deltaTime >= speed) {
+                    frame.intValue = (frame.intValue + 1) % totalFrames
                 }
             }
-            delay((duration * 1000).toLong())
         }
     }
 }
 
 private fun Modifier.drawBackgroundSquares() = this.then(
-    Modifier.Companion.drawBehind {
+    Modifier.drawBehind {
         val imageWidth = size.width
         val imageHeight = size.height
         val squareSize = 10f
@@ -257,7 +329,7 @@ private fun Modifier.drawBackgroundSquares() = this.then(
             for (j in 0 until verticalSquares) {
                 val isEven = (i + j) % 2 == 0
                 drawRect(
-                    color = if (isEven) Color.Companion.LightGray else Color.Companion.Gray,
+                    color = if (isEven) Color.LightGray else Color.Gray,
                     topLeft = Offset(i * squareSize, j * squareSize),
                     size = when {
                         i == horizontalSquares - 1 && j == verticalSquares - 1 -> Size(
@@ -265,8 +337,16 @@ private fun Modifier.drawBackgroundSquares() = this.then(
                             imageHeight - j * squareSize
                         )
 
-                        i == horizontalSquares - 1 -> Size(imageWidth - i * squareSize, squareSize)
-                        j == verticalSquares - 1 -> Size(squareSize, imageHeight - j * squareSize)
+                        i == horizontalSquares - 1 -> Size(
+                            imageWidth - i * squareSize,
+                            squareSize
+                        )
+
+                        j == verticalSquares - 1 -> Size(
+                            squareSize,
+                            imageHeight - j * squareSize
+                        )
+
                         else -> Size(squareSize, squareSize)
                     }
                 )

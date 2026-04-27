@@ -1,10 +1,14 @@
 package com.mc.gameengine.engine.assets
 
 import com.mc.gameengine.engine.core.SpriteId
+import com.mc.gameengine.engine.math.Vec2
 
 sealed interface SpriteDefinition {
     val spriteId: SpriteId
     val totalFrames: Int
+    val srcOffset: Vec2?
+    val srcSize: Vec2?
+    val hasAlpha: Boolean
 }
 
 data class AtlasSpriteDef(
@@ -12,21 +16,20 @@ data class AtlasSpriteDef(
     val resId: Int,
     val columns: Int,
     val rows: Int,
-    val offsetX: Int = 0,
-    val offsetY: Int = 0,
-    val spriteWidth: Int,
-    val spriteHeight: Int,
-    val spacingX: Int = 0,
-    val spacingY: Int = 0
+    override val hasAlpha: Boolean = true,
+    override val srcOffset: Vec2? = null,
+    override val srcSize: Vec2? = null,
+    val srcSpacing: Vec2? = null,
 ) : SpriteDefinition {
-    override val totalFrames = columns * rows - 1
+    override val totalFrames = columns * rows
 }
 
 data class FrameListSpriteDef(
     override val spriteId: SpriteId,
     val resIds: List<Int>,
-    val offsetX: Int = 0,
-    val offsetY: Int = 0
+    override val hasAlpha: Boolean = true,
+    override val srcOffset: Vec2? = null,
+    override val srcSize: Vec2? = null
 ) : SpriteDefinition {
     override val totalFrames: Int = resIds.size
 }
@@ -34,8 +37,9 @@ data class FrameListSpriteDef(
 data class SingleImageSpriteDef(
     override val spriteId: SpriteId,
     val resId: Int,
-    val offsetX: Int = 0,
-    val offsetY: Int = 0
+    override val hasAlpha: Boolean = true,
+    override val srcOffset: Vec2? = null,
+    override val srcSize: Vec2? = null
 ) : SpriteDefinition {
-    override val totalFrames: Int = 0
+    override val totalFrames: Int = 1
 }

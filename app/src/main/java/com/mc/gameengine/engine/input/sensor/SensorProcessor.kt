@@ -1,7 +1,7 @@
-package com.mc.gameengine.engine.input
+package com.mc.gameengine.engine.input.sensor
 
 import android.hardware.Sensor
-import android.hardware.SensorEvent
+import android.hardware.SensorEvent as HardwareSensorEvent
 import com.mc.gameengine.engine.math.Vec3
 import com.mc.gameengine.engine.math.round
 import com.mc.gameengine.engine.time.SmoothValue
@@ -14,7 +14,7 @@ class SensorProcessor(
 
     private val smoothGyroscope = Array(3) { SmoothValue() }
 
-    fun onSensorChanged(event: SensorEvent) {
+    fun onSensorChanged(event: HardwareSensorEvent) {
         when (event.sensor.type) {
 
             Sensor.TYPE_ACCELEROMETER -> {
@@ -29,7 +29,7 @@ class SensorProcessor(
                     z = smoothAccelerometer[2].value.round(1)
                 )
 
-                sensorManager.dispatch(AccelerometerEvent(axis))
+                sensorManager.dispatch(SensorEvent.AccelerometerEvent(axis))
             }
 
             Sensor.TYPE_GYROSCOPE -> {
@@ -43,7 +43,7 @@ class SensorProcessor(
                     z = smoothGyroscope[2].value.round(1)
                 )
 
-                sensorManager.dispatch(GyroscopeEvent(axis))
+                sensorManager.dispatch(SensorEvent.GyroscopeEvent(axis))
             }
         }
     }

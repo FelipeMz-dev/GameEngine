@@ -1,13 +1,15 @@
 package com.mc.gameengine.engine.core
 
+import com.mc.gameengine.engine.assets.Sprite
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.times
-import com.mc.gameengine.engine.assets.SpriteDefinition
 import com.mc.gameengine.engine.collision.Collider
 import com.mc.gameengine.engine.math.lerp
 import com.mc.gameengine.engine.physics.PhysicsState
+import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
+import com.mc.gameengine.engine.audio.AudioPlayer
 
 open class Instance {
 
@@ -15,19 +17,17 @@ open class Instance {
     private var previous = TransformState()
     protected var current = TransformState()
     protected var physics = PhysicsState()
-
-    private val colliders = mutableListOf<Collider>()
+    protected val audioPlayer: AudioPlayer
+        get() = context.audioPlayer
 
     fun currentState(): TransformState = current
 
-    internal fun allColliders(): List<Collider> = colliders
-
     internal fun addCollider(collider: Collider) {
-        colliders += collider
+        context.addCollider(collider)
     }
 
     internal fun removeCollider(collider: Collider) {
-        colliders -= collider
+        context.removeCollider(collider)
     }
 
     internal fun onAddedToScene(context: WorldContext) {
@@ -37,10 +37,31 @@ open class Instance {
 
     internal fun onRemovedFromScene() {
         onExitScene()
+        context.clearInstanceColliders(this)
     }
 
     internal fun snapshot() {
         previous = current.copy()
+    }
+
+    protected fun rotateCamera(angle: Float, from: Vec2 = Vec2.Zero){
+        context.rotateCamera(angle, from)
+    }
+
+    protected fun translateCamera(to: Vec2){
+        context.translateCamera(to)
+    }
+
+    protected fun zoomCamera(value: Float, from: Vec2 = Vec2.Zero){
+        context.zoomCamera(value, from)
+    }
+
+    fun screenToWorld(screenPos: Vec2): Vec2 {
+        return context.screenToWorld(screenPos)
+    }
+
+    fun worldToScreen(worldPos: Vec2): Vec2 {
+        return context.worldToScreen(worldPos)
     }
 
     internal fun Renderer.render(alpha: Float) {
@@ -70,13 +91,27 @@ open class Instance {
         physics = physics.copy(velocity = block(physics.velocity))
     }
 
+    protected fun updateAngle(block: (Float) -> Float) {
+        current = current.copy(angle = block(current.angle))
+    }
+
+    protected fun updateScale(block: (Vec2) -> Vec2) {
+        current = current.copy(scale = block(current.scale))
+    }
+
+    protected fun updatePivot(block: (Pivot) -> Pivot) {
+        current = current.copy(pivot = block(current.pivot))
+    }
+
     protected fun viewportSize(): Vec2 = context.viewportSize()
 
     protected fun viewportScale(): Vec2 = context.viewportScale()
 
+    protected fun fromViewport(position: Vec2): Vec2 = context.calculateFromViewport(position)
+
     protected fun spriteSize(id: SpriteId): Vec2 = context.spriteSize(id)
 
-    protected fun SpriteDefinition.size(): Vec2 = context.spriteSize(this.spriteId)
+    protected fun Sprite.size(): Vec2 = context.spriteSize(this.spriteId)
 
     protected fun deleteInstance(instance: Instance) = context.deleteInstance(instance)
 

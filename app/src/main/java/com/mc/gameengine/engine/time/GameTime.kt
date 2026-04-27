@@ -1,6 +1,6 @@
 package com.mc.gameengine.core.time
 
-class GameTime {
+internal class GameTime {
 
     var deltaTime: Float = 0f
         private set
@@ -24,6 +24,6 @@ class GameTime {
         deltaTime = frameDelta
         accumulator += frameDelta
 
-        alpha = (accumulator / TimeConfig.FIXED_DELTA).coerceIn(0f, 1f)
+        alpha = (accumulator / TimeConfig.FIXED_DELTA_60).coerceIn(0f, 1f)
     }
 }

@@ -2,8 +2,11 @@ package com.mc.gameengine.engine.compose
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -12,7 +15,6 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntRect
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.div
 import com.mc.gameengine.engine.math.minus
@@ -21,18 +23,21 @@ import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.math.toOffset
 import com.mc.gameengine.engine.math.toSize
 import com.mc.gameengine.engine.math.toVec2
-import com.mc.gameengine.engine.assets.AssetsManager
+import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.assets.AtlasSprite
 import com.mc.gameengine.engine.assets.FrameListSprite
 import com.mc.gameengine.engine.assets.SingleImageSprite
+import com.mc.gameengine.engine.assets.Sprite
 import com.mc.gameengine.engine.core.SpriteId
+import com.mc.gameengine.engine.core.TransformState
+import com.mc.gameengine.engine.math.rem
 import com.mc.gameengine.engine.math.resolve
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
 class RendererImpl(
     private val drawScope: DrawScope,
-    private val spriteManager: AssetsManager,
+    private val spriteManager: SpriteManager,
     private val textMeasurer: TextMeasurer,
     private var camera: Camera2D
 ) : Renderer {
@@ -40,67 +45,129 @@ class RendererImpl(
     private val commands = mutableListOf<RenderCommand>()
 
     override fun flush() {
+        val cameraScale = camera.zoom.value
+        val cameraScaleFrom = camera.zoom.from.toOffset()
+        val cameraRotationFrom = camera.rotation.from.toOffset()
+
         commands.sortBy { it.order }
-        commands.forEach { cmd ->
-            with(drawScope) {
-                withTransform(
-                    transformBlock = {
-                        translate(camera.position.x, camera.position.y)
-                        scale(camera.zoom, camera.zoom)
-                        rotate(camera.rotation)
-                        translate(-camera.position.x, -camera.position.y)
-                    }
-                ) { cmd.draw(this) }
-            }
+        with(drawScope) {
+            withTransform(
+                transformBlock = {
+                    scale(cameraScale, cameraScale, cameraScaleFrom)
+                    rotate(camera.rotation.angle, cameraRotationFrom)
+                    translate(camera.position.x, camera.position.y)
+                }
+            ) { commands.forEach { it.draw(this) } }
         }
         commands.clear()
     }
 
-    override fun clear(
-        color: Color,
-        deep: Int
-    ) {
-        commands += RenderCommand(deep) {
-            drawRect(color)
-        }
-    }
-
-    override fun drawLine(
-        startX: Float,
-        startY: Float,
-        endX: Float,
-        endY: Float,
-        strokeWidth: Float,
-        color: Color,
-        deep: Int
-    ) {
-        commands += RenderCommand(deep) {
-            drawLine(
-                color = color,
-                start = Offset(startX, startY),
-                end = Offset(endX, endY),
-                strokeWidth = strokeWidth
+    override fun clear(color: Color) {
+        commands += RenderCommand(RenderDepth.BACKGROUND) {
+            val size = this.size
+            drawRect(
+                topLeft = Offset(-size.width, -size.height),
+                color = color
             )
         }
     }
 
-    override fun drawRect(
-        position: Vec2,
-        size: Vec2,
-        angle: Float,
-        scale: Vec2,
-        pivot: Pivot,
-        color: Color,
-        style: DrawStyle,
-        deep: Int
+    private fun DrawScope.drawGird() {
+        for (i in 1 until drawScope.size.width.toInt()) {
+            val pos = i * 32f
+            drawLine(
+                start = Offset(pos, 0f),
+                end = Offset(pos, drawScope.size.height),
+                strokeWidth = 1f,
+                color = Color.DarkGray
+            )
+        }
+        for (i in 1 until drawScope.size.height.toInt()) {
+            val pos = i * 32f
+            drawLine(
+                start = Offset(0f, pos),
+                end = Offset(drawScope.size.width, pos),
+                strokeWidth = 1f,
+                color = Color.DarkGray
+            )
+        }
+    }
+
+    override fun drawPoints(
+        points: List<Vec2>,
+        state: TransformState,
+        strokeWidth: Float,
+        deep: Int,
+        color: Color
     ) {
-        val pivotOffset = pivot.resolve(size)
-        val topLeft = (position - pivotOffset)
-        val scaledSize = (size * scale).toSize()
+        val sizeX = points.minOf { it.x } - points.minOf { it.x }
+        val sizeY = points.minOf { it.y } - points.maxOf { it.y }
+        val size = Vec2(sizeX, sizeY)
+        val pivotOffset = state.pivot.resolve(size)
+        val topLeft = (state.position - pivotOffset)
+        commands += RenderCommand(RenderDepth.DEBUG) {
+            withTransform(
+                {
+                    scale(state.scale.x, state.scale.y, pivotOffset.toOffset())
+                    rotate(state.angle, pivotOffset.toOffset())
+                    translate(topLeft.x, topLeft.y)
+                }
+            ) {
+                this.drawPoints(
+                    points = points.map { it.toOffset() },
+                    pointMode = PointMode.Points,
+                    color = color,
+                    strokeWidth = strokeWidth
+                )
+            }
+        }
+    }
+
+    override fun drawLine(
+        start: Vec2,
+        end: Vec2,
+        state: TransformState,
+        strokeWidth: Float,
+        deep: Int,
+        color: Color
+    ) {
+        val sizeX = minOf(start.x, end.x)
+        val sizeY = minOf(start.y, end.y)
+        val size = Vec2(sizeX, sizeY)
+        val pivotOffset = state.pivot.resolve(size)
+        val topLeft = (state.position - pivotOffset)
+        commands += RenderCommand(RenderDepth.DEBUG) {
+            withTransform(
+                {
+                    scale(state.scale.x, state.scale.y, pivotOffset.toOffset())
+                    rotate(state.angle, pivotOffset.toOffset())
+                    translate(topLeft.x, topLeft.y)
+                }
+            ) {
+                drawLine(
+                    color = color,
+                    start = start.toOffset(),
+                    end = end.toOffset(),
+                    strokeWidth = strokeWidth
+                )
+            }
+        }
+    }
+
+    override fun drawRect(
+        size: Vec2,
+        state: TransformState,
+        style: DrawStyle,
+        deep: Int,
+        color: Color
+    ) {
+        val pivotOffset = state.pivot.resolve(size)
+        val topLeft = (state.position - pivotOffset)
+        val scaledSize = (size * state.scale).toSize()
         commands += RenderCommand(deep) {
             withTransform(
                 {
-                    rotate(angle, position.toOffset())
+                    rotate(state.angle, state.position.toOffset())
                     translate(topLeft.x, topLeft.y)
                 }
             ) {
@@ -114,27 +181,24 @@ class RendererImpl(
     }
 
     override fun drawCircle(
-        position: Vec2,
         radius: Float,
-        angle: Float,
-        pivot: Pivot,
-        color: Color,
+        state: TransformState,
+        deep: Int,
         style: DrawStyle,
-        deep: Int
+        color: Color
     ) {
-        val size = Size(radius * 2, radius * 2)
-        val pivotOffset = pivot.resolve(size.toVec2())
-        val offset = (position + radius) - pivotOffset
+        val size = Vec2(radius, radius) * 2f
+        val pivotOffset = state.pivot.resolve(size)
+        val topLeft = (state.position - pivotOffset)
         commands += RenderCommand(deep) {
             withTransform(
                 {
-                    translate(position.x, position.y)
-                    rotate(angle, pivotOffset.toOffset())
-                    translate(-pivotOffset.x, -pivotOffset.y)
+                    scale(state.scale.x, state.scale.y, pivotOffset.toOffset())
+                    rotate(state.angle, state.position.toOffset())
+                    translate(topLeft.x, topLeft.y)
                 }
             ) {
                 drawCircle(
-                    center = offset.toOffset(),
                     color = color,
                     radius = radius,
                     style = style
@@ -144,22 +208,19 @@ class RendererImpl(
     }
 
     override fun drawOval(
-        position: Vec2,
         size: Vec2,
-        angle: Float,
-        scale: Vec2,
-        pivot: Pivot,
-        color: Color,
+        state: TransformState,
         style: DrawStyle,
-        deep: Int
+        deep: Int,
+        color: Color
     ) {
-        val pivotOffset = pivot.resolve(size)
-        val topLeft = (position - pivotOffset)
-        val scaledSize = (size * scale).toSize()
+        val pivotOffset = state.pivot.resolve(size)
+        val topLeft = (state.position - pivotOffset)
+        val scaledSize = (size * state.scale).toSize()
         commands += RenderCommand(deep) {
             withTransform(
                 {
-                    rotate(angle, position.toOffset())
+                    rotate(state.angle, state.position.toOffset())
                     translate(topLeft.x, topLeft.y)
                 }
             ) {
@@ -173,14 +234,11 @@ class RendererImpl(
     }
 
     override fun drawPolygon(
-        position: Vec2,
         points: List<Vec2>,
-        color: Color,
-        angle: Float,
-        pivot: Pivot,
-        scale: Vec2,
+        state: TransformState,
         style: DrawStyle,
-        deep: Int
+        deep: Int,
+        color: Color
     ) {
         val path = Path().apply {
             points.forEachIndexed { index, item ->
@@ -191,14 +249,14 @@ class RendererImpl(
         }
         val width = points.maxOf { it.x } - points.minOf { it.x }
         val height = points.maxOf { it.y } - points.minOf { it.y }
-        val pivotOffset = pivot.resolve(Vec2(width, height))
+        val pivotOffset = state.pivot.resolve(Vec2(width, height))
         commands += RenderCommand(deep) {
             withTransform(
                 {
-                    translate(position.x, position.y)
+                    translate(state.position.x, state.position.y)
                     translate(-pivotOffset.x, -pivotOffset.y)
-                    scale(scale.x, scale.y, pivotOffset.toOffset())
-                    rotate(angle, pivotOffset.toOffset())
+                    scale(state.scale.x, state.scale.y, pivotOffset.toOffset())
+                    rotate(state.angle, pivotOffset.toOffset())
                 }
             ) {
                 drawPath(
@@ -218,167 +276,56 @@ class RendererImpl(
     ) {
         val spriteSize = size.toVec2() / spriteManager.getSize(spriteId)
         drawSprite(
-            sprite = spriteId,
+            spriteId = spriteId,
             frame = 1,
-            position = position,
-            rotation = 0f,
-            scale = spriteSize,
+            state = TransformState(
+                position = position,
+                angle = 0f,
+                scale = spriteSize
+            ),
             deep = deep
         )
     }
 
     override fun drawSprite(
-        sprite: SpriteId,
+        spriteId: SpriteId,
+        state: TransformState,
         frame: Int,
-        position: Vec2,
-        rotation: Float,
-        scale: Vec2,
+        deep: Int,
         color: Color,
-        pivot: Pivot,
-        flipX: Boolean,
-        flipY: Boolean,
-        deep: Int
-    ) = when (val sprite = spriteManager.get(sprite)) {
-        is AtlasSprite -> drawAtlasSprite(
-            atlas = sprite,
-            frame = frame,
-            position = position,
-            rotation = rotation,
-            scale = scale,
-            color = color,
-            pivot = pivot,
-            flipX = flipX,
-            flipY = flipY,
-            deep = deep
-        )
-
-        is FrameListSprite -> drawFrameList(
-            sprite = sprite,
-            frame = frame,
-            position = position,
-            rotation = rotation,
-            scale = scale,
-            color = color,
-            pivot = pivot,
-            flipX = flipX,
-            flipY = flipY,
-            deep = deep
-        )
-
-        is SingleImageSprite -> drawImageSprite(
-            sprite = sprite,
-            position = position,
-            rotation = rotation,
-            scale = scale,
-            color = color,
-            pivot = pivot,
-            flipX = flipX,
-            flipY = flipY,
-            deep = deep
-        )
-
-        else -> Unit
-    }
-
-    private fun drawImageSprite(
-        sprite: SingleImageSprite,
-        position: Vec2,
-        rotation: Float,
-        scale: Vec2,
-        color: Color,
-        pivot: Pivot,
-        flipX: Boolean,
-        flipY: Boolean,
-        deep: Int
+        blendMode: BlendMode
     ) {
-        commands += RenderCommand(deep) {
-            drawSpriteInternal(
-                image = sprite.image,
-                src = IntRect(
-                    left = sprite.offsetX,
-                    top = sprite.offsetY,
-                    right = sprite.offsetX + sprite.spriteWidth,
-                    bottom = sprite.offsetY + sprite.spriteHeight
-                ),
-                position = position,
-                rotation = rotation,
-                scale = scale,
-                color = color,
-                pivot = pivot,
-                flipX = flipX,
-                flipY = flipY
-            )
+        val img = when (val sprite = spriteManager.get(spriteId)) {
+            is AtlasSprite -> sprite.image
+            is FrameListSprite -> sprite.images.getOrNull(frame % sprite.images.size)
+            is SingleImageSprite -> sprite.image
+            else -> null
+        }
+
+        img?.also {
+            commands += RenderCommand(deep) {
+                drawSpriteInternal(
+                    image = img,
+                    state = state,
+                    colorFilter = ColorFilter.tint(color, blendMode)
+                )
+            }
         }
     }
 
-    private fun drawAtlasSprite(
-        atlas: AtlasSprite,
-        frame: Int,
-        position: Vec2,
-        rotation: Float,
-        scale: Vec2,
+    override fun Sprite.draw(
+        deep: Int,
         color: Color,
-        pivot: Pivot,
-        flipX: Boolean,
-        flipY: Boolean,
-        deep: Int
+        blendMode: BlendMode
     ) {
-        val col = frame % atlas.columns
-        val row = frame / atlas.columns
-
-        val src = IntRect(
-            left = atlas.offsetX + col * (atlas.spriteWidth + atlas.spacingX),
-            top = atlas.offsetY + row * (atlas.spriteHeight + atlas.spacingY),
-            right = atlas.offsetX + col * (atlas.spriteWidth + atlas.spacingX) + atlas.spriteWidth,
-            bottom = atlas.offsetY + row * (atlas.spriteHeight + atlas.spacingY) + atlas.spriteHeight
+        drawSprite(
+            spriteId = spriteId,
+            frame = currentFrame,
+            state = state,
+            deep = deep,
+            color = color,
+            blendMode = blendMode
         )
-        commands += RenderCommand(deep) {
-            drawSpriteInternal(
-                image = atlas.image,
-                src = src,
-                position = position,
-                rotation = rotation,
-                scale = scale,
-                color = color,
-                pivot = pivot,
-                flipX = flipX,
-                flipY = flipY
-            )
-        }
-    }
-
-    private fun drawFrameList(
-        sprite: FrameListSprite,
-        frame: Int,
-        position: Vec2,
-        rotation: Float,
-        scale: Vec2,
-        color: Color,
-        pivot: Pivot,
-        flipX: Boolean,
-        flipY: Boolean,
-        deep: Int
-    ) {
-        val image = sprite.frames.getOrNull(frame % sprite.frames.size) ?: return
-
-        commands += RenderCommand(deep) {
-            drawSpriteInternal(
-                image = image,
-                src = IntRect(
-                    left = sprite.offsetX,
-                    top = sprite.offsetY,
-                    right = sprite.offsetX + sprite.spriteWidth,
-                    bottom = sprite.offsetY + sprite.spriteHeight
-                ),
-                position = position,
-                rotation = rotation,
-                scale = scale,
-                color = color,
-                pivot = pivot,
-                flipX = flipX,
-                flipY = flipY
-            )
-        }
     }
 
     override fun drawText(
@@ -447,107 +394,84 @@ class RendererImpl(
 
     override fun drawBackground(
         sprite: SpriteId,
-        position: Vec2,
-        scale: Vec2,
-        config: ParallaxConfig
+        frame: Int,
+        state: TransformState,
+        contentScale: ContentScale
     ) {
-        drawParallaxLayer(
-            sprite = sprite,
-            basePosition = position,
-            baseScale = scale,
-            config = config,
-            depth = RenderDepth.BACKGROUND
+        val spriteBaseSize = spriteManager.getSize(sprite)
+
+        val contentScale = contentScale.computeScaleFactor(
+            srcSize = spriteBaseSize.toSize(),
+            dstSize = camera.viewportSize.toSize()
+        ).let { Vec2(it.scaleX, it.scaleY) }
+
+        drawSprite(
+            spriteId = sprite,
+            frame = frame,
+            state = state.copy(scale = state.scale * contentScale),
+            deep = RenderDepth.BACKGROUND
         )
     }
 
     override fun drawForeground(
         sprite: SpriteId,
-        position: Vec2,
-        scale: Vec2,
-        config: ParallaxConfig
+        frame: Int,
+        state: TransformState,
+        contentScale: ContentScale
     ) {
-        drawParallaxLayer(
-            sprite = sprite,
-            basePosition = position,
-            baseScale = scale,
-            config = config,
-            depth = RenderDepth.FOREGROUND
+        val spriteBaseSize = spriteManager.getSize(sprite)
+
+        val contentScale = contentScale.computeScaleFactor(
+            srcSize = spriteBaseSize.toSize(),
+            dstSize = camera.viewportSize.toSize()
+        ).let { Vec2(it.scaleX, it.scaleY) }
+
+        drawSprite(
+            spriteId = sprite,
+            frame = frame,
+            state = state.copy(scale = state.scale * contentScale),
+            deep = RenderDepth.FOREGROUND
         )
     }
 
-    private fun drawParallaxLayer(
-        sprite: SpriteId,
-        basePosition: Vec2,
-        baseScale: Vec2,
-        config: ParallaxConfig,
-        depth: Int
-    ) = with(camera) {
-        val spriteBaseSize = spriteManager.getSize(sprite)
+    override fun drawInfiniteImage(
+        spriteId: SpriteId,
+        parallaxFactor: Float,
+        contentScale: ContentScale,
+        deep: Int
+    ) {
+        val spriteSize = spriteManager.getSize(spriteId)
+        if (spriteSize == Vec2.Zero) return
 
-        val contentScale = config.contentScale.computeScaleFactor(
-            srcSize = spriteBaseSize.toSize(),
-            dstSize = viewportSize.toSize()
+        val contentScale = contentScale.computeScaleFactor(
+            srcSize = spriteSize.toSize(),
+            dstSize = camera.viewportSize.toSize()
         ).let { Vec2(it.scaleX, it.scaleY) }
 
-        val finalScale = baseScale * contentScale
-        val spriteSize = spriteBaseSize * finalScale
+        val scaledSize = spriteSize * contentScale
+        val movement = camera.position * (0f - parallaxFactor)
+        val offset = ((movement % scaledSize) + scaledSize) % scaledSize
+        val startDraw = Vec2.Zero - camera.position - offset
 
-        val baseX = if (config.loopX) infiniteOffset(spriteSize.x, position.x, config.parallax)
-        else position.x * (1f - config.parallax)
+        val tilesX = (camera.viewportSize.x / scaledSize.x).toInt() + 2
+        val tilesY = (camera.viewportSize.y / scaledSize.y).toInt() + 2
 
-        val baseY = if (config.loopY) infiniteOffset(spriteSize.y, position.y, config.parallax)
-        else basePosition.y - position.y * (1f - config.parallax)
-
-        val tilesX = if (config.loopX) (viewportSize.x / spriteSize.x).toInt() + 3 else 1
-
-        val tilesY = if (config.loopY) (viewportSize.y / spriteSize.y).toInt() + 3 else 1
-
-        repeat(tilesX) { ix ->
-            repeat(tilesY) { iy ->
-
-                val finalPosition = Vec2(
-                    baseX + ix * spriteSize.x,
-                    baseY + iy * spriteSize.y
-                )
+        for (i in -1..tilesX) {
+            for (j in -1..tilesY) {
+                val posX = startDraw.x + (i * scaledSize.x)
+                val posY = startDraw.y + (j * scaledSize.y)
 
                 drawSprite(
-                    sprite = sprite,
+                    spriteId = spriteId,
                     frame = 1,
-                    position = finalPosition,
-                    scale = finalScale,
-                    deep = depth
+                    state = TransformState(
+                        position = Vec2(posX, posY),
+                        angle = 0f,
+                        scale = contentScale
+                    ),
+                    deep = deep
                 )
             }
         }
     }
 }
-
-data class ParallaxConfig(
-    val parallax: Float = 1f,
-    val loopX: Boolean = false,
-    val loopY: Boolean = false,
-    val contentScale: ContentScale = ContentScale.Fit
-)
-
-object RenderDepth {
-    const val BACKGROUND = -10_000
-    const val FOREGROUND = 10_000
-    const val DEBUG = 10_002
-    const val UI = 10_001
-}
-
-private fun infiniteOffset(
-    spriteSize: Float,
-    cameraPos: Float,
-    parallax: Float
-): Float {
-    val effective = cameraPos * parallax
-    return -(effective % spriteSize)
-}
-
-data class Camera2D(
-    var position: Vec2 = Vec2.Zero,
-    var zoom: Float = 1f,
-    var rotation: Float = 0f,
-    var viewportSize: Vec2 = Vec2.Zero
-)

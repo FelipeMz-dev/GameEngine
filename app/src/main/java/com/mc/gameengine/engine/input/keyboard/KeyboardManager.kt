@@ -1,8 +1,4 @@
-package com.mc.gameengine.engine.input
-
-interface KeyboardListener {
-    fun onKeyEvent(event: KeyboardEvent)
-}
+package com.mc.gameengine.engine.input.keyboard
 
 class KeyboardManager {
 

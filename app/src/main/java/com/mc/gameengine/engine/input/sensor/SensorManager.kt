@@ -1,8 +1,4 @@
-package com.mc.gameengine.engine.input
-
-interface SensorListener {
-    fun onSensorEvent(event: SensorEvent)
-}
+package com.mc.gameengine.engine.input.sensor
 
 class SensorManager {
 

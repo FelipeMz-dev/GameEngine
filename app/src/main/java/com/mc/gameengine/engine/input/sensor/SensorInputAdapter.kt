@@ -1,10 +1,11 @@
-package com.mc.gameengine.engine.input
+package com.mc.gameengine.engine.input.sensor
 
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import com.mc.gameengine.engine.input.sensor.SensorProcessor
 
 class SensorInputAdapter(
     context: Context,

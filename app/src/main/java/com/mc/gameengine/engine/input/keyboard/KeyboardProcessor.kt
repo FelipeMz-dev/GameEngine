@@ -1,4 +1,4 @@
-package com.mc.gameengine.engine.input
+package com.mc.gameengine.engine.input.keyboard
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
@@ -18,12 +18,12 @@ class KeyboardProcessor(
         when (event.type) {
             KeyEventType.KeyDown -> {
                 if (pressedKeys.add(key)) {
-                    keyboardManager.dispatchKeyEvent(KeyDown(key))
+                    keyboardManager.dispatchKeyEvent(KeyboardEvent.KeyDown(key))
                 }
             }
             KeyEventType.KeyUp -> {
                 if (pressedKeys.remove(key)) {
-                    keyboardManager.dispatchKeyEvent(KeyUp(key))
+                    keyboardManager.dispatchKeyEvent(KeyboardEvent.KeyUp(key))
                 }
             }
         }
@@ -32,7 +32,7 @@ class KeyboardProcessor(
 
     fun update(dt: Float) {
         pressedKeys.forEach {
-            keyboardManager.dispatchKeyEvent(KeyHeld(it, dt))
+            keyboardManager.dispatchKeyEvent(KeyboardEvent.KeyHeld(it, dt))
         }
     }
 }

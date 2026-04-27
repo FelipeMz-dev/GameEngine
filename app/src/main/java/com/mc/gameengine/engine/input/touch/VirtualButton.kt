@@ -1,4 +1,4 @@
-package com.mc.gameengine.engine.input
+package com.mc.gameengine.engine.input.touch
 
 data class VirtualButton(
     private val id: String,
@@ -7,7 +7,7 @@ data class VirtualButton(
 ) {
     fun onPress() {
         input.dispatch(
-            ButtonEvent(
+            TouchEvent.ButtonEvent(
                 id = id,
                 pressed = true
             )
@@ -16,7 +16,7 @@ data class VirtualButton(
 
     fun onTap() {
         input.dispatch(
-            ButtonEvent(
+            TouchEvent.ButtonEvent(
                 id = id,
                 pressed = false
             )

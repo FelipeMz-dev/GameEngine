@@ -2,21 +2,32 @@ package com.mc.gameengine.engine.collision
 
 import com.mc.gameengine.engine.core.Instance
 
-class CollisionSystem {
+internal class CollisionSystem {
 
-    fun check(instances: List<Instance>) {
-        val colliders = instances.flatMap { it.allColliders() }
-        for (i in colliders.indices) {
-            for (j in i + 1 until colliders.size) {
+    val colliders = mutableListOf<Collider>()
 
-                val a = colliders[i]
-                val b = colliders[j]
+    fun addCollider(collider: Collider) {
+        colliders += collider
+    }
 
-                if (a == b) continue
+    fun removeCollider(collider: Collider) {
+        colliders -= collider
+    }
 
-                if (a.intersects(b)) {
-                    dispatch(a, b)
-                }
+    fun clearInstanceColliders(instance: Instance) {
+        colliders.removeIf { it.owner == instance }
+    }
+
+    fun check() {
+        val collidersEnabled = colliders.filter { it.isEnabled }
+
+        for (i in collidersEnabled.indices) {
+            for (j in i + 1 until collidersEnabled.size) {
+                val a = collidersEnabled[i]
+                val b = collidersEnabled[j]
+                if (a.owner !is CollisionListener && b.owner !is CollisionListener) continue
+                if (!a.aabb.overlaps(b.aabb)) continue
+                if (a.intersects(b)) dispatch(a, b)
             }
         }
     }

@@ -4,27 +4,36 @@ import com.mc.gameengine.engine.math.IntersectionUtil
 
 object CollisionResolver {
 
-    private val intersector = IntersectionUtil()
-
     fun test(a: Collider, b: Collider): Boolean = when (a) {
         is EllipseCollider -> when (b) {
-            is EllipseCollider -> intersector.ovalOval(a, b)
-            is BoxCollider -> intersector.boxOval(b, a)
-            is PolygonalCollider -> intersector.polygonOval(a, b)
+            is EllipseCollider -> IntersectionUtil.ovalOval(a, b)
+            is BoxCollider -> IntersectionUtil.boxOval(b, a)
+            is PolygonalCollider -> IntersectionUtil.polygonOval(a, b)
+            is MaskCollider -> IntersectionUtil.ovalMask(a, b)
             else -> false
         }
 
         is BoxCollider -> when (b) {
-            is EllipseCollider -> intersector.boxOval(a, b)
-            is BoxCollider -> intersector.boxBox(a, b)
-            is PolygonalCollider -> intersector.polygonBox(a, b)
+            is EllipseCollider -> IntersectionUtil.boxOval(a, b)
+            is BoxCollider -> IntersectionUtil.boxBox(a, b)
+            is PolygonalCollider -> IntersectionUtil.polygonBox(a, b)
+            is MaskCollider -> IntersectionUtil.boxMask(a, b)
             else -> false
         }
 
         is PolygonalCollider -> when (b) {
-            is EllipseCollider -> intersector.polygonOval(b, a)
-            is BoxCollider -> intersector.polygonBox(b, a)
-            is PolygonalCollider -> intersector.polygonPolygon(a, b)
+            is EllipseCollider -> IntersectionUtil.polygonOval(b, a)
+            is BoxCollider -> IntersectionUtil.polygonBox(b, a)
+            is PolygonalCollider -> IntersectionUtil.polygonPolygon(a, b)
+            is MaskCollider -> IntersectionUtil.polygonMask(a, b)
+            else -> false
+        }
+
+        is MaskCollider -> when (b) {
+            is PolygonalCollider -> IntersectionUtil.polygonMask(b, a)
+            is BoxCollider -> IntersectionUtil.boxMask(b, a)
+            is EllipseCollider -> IntersectionUtil.ovalMask(b, a)
+            is MaskCollider -> IntersectionUtil.maskMask(a, b)
             else -> false
         }
 

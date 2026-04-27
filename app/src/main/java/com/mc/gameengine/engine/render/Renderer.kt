@@ -1,56 +1,57 @@
 package com.mc.gameengine.engine.render
 
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
+import com.mc.gameengine.engine.assets.Sprite
 import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.compose.ParallaxConfig
+import com.mc.gameengine.engine.compose.RenderDepth
 import com.mc.gameengine.engine.core.SpriteId
+import com.mc.gameengine.engine.core.TransformState
 
 interface Renderer {
 
     fun flush()
 
-    fun clear(
-        color: Color,
-        deep: Int = 0
+    fun clear(color: Color)
+
+    fun drawPoints(
+        points: List<Vec2>,
+        state: TransformState,
+        strokeWidth: Float = 1f,
+        deep: Int = 0,
+        color: Color = Color.Gray
     )
 
     fun drawRect(
-        position: Vec2,
         size: Vec2,
-        angle: Float = 0f,
-        scale: Vec2 = Vec2.from(1f),
-        pivot: Pivot = Pivot.TopLeft,
-        color: Color = Color.Gray,
+        state: TransformState,
         style: DrawStyle = Fill,
-        deep: Int = 0
+        deep: Int = 0,
+        color: Color = Color.Gray
     )
 
     fun drawCircle(
-        position: Vec2,
         radius: Float,
-        angle: Float = 0f,
-        pivot: Pivot = Pivot.TopLeft,
-        color: Color = Color.Gray,
+        state: TransformState,
+        deep: Int = 0,
         style: DrawStyle = Fill,
-        deep: Int = 0
+        color: Color = Color.Gray
     )
 
     fun drawOval(
-        position: Vec2,
         size: Vec2,
-        angle: Float = 0f,
-        scale: Vec2 = Vec2.from(1f),
-        pivot: Pivot = Pivot.TopLeft,
-        color: Color = Color.Gray,
+        state: TransformState,
         style: DrawStyle = Fill,
-        deep: Int = 0
+        deep: Int = 0,
+        color: Color = Color.Gray
     )
 
     fun drawImage(
@@ -61,37 +62,35 @@ interface Renderer {
     )
 
     fun drawLine(
-        startX: Float,
-        startY: Float,
-        endX: Float,
-        endY: Float,
+        start: Vec2,
+        end: Vec2,
+        state: TransformState,
         strokeWidth: Float,
-        color: Color,
-        deep: Int = 0
+        deep: Int = 0,
+        color: Color
     )
 
     fun drawPolygon(
-        position: Vec2,
         points: List<Vec2>,
-        color: Color,
-        angle: Float = 0f,
-        pivot: Pivot = Pivot.TopLeft,
-        scale: Vec2 = Vec2.from(1f),
+        state: TransformState,
         style: DrawStyle = Fill,
-        deep: Int = 0
+        deep: Int = 0,
+        color: Color = Color.Gray
     )
 
     fun drawSprite(
-        sprite: SpriteId,
-        frame: Int,
-        position: Vec2,
-        rotation: Float = 0f,
-        scale: Vec2 = Vec2(1f, 1f),
+        spriteId: SpriteId,
+        state: TransformState,
+        frame: Int = 1,
+        deep: Int = 0,
         color: Color = Color.White,
-        pivot: Pivot = Pivot.TopLeft,
-        flipX: Boolean = false,
-        flipY: Boolean = false,
-        deep: Int = 0
+        blendMode: BlendMode = BlendMode.Modulate
+    )
+
+    fun Sprite.draw(
+        deep: Int = 0,
+        color: Color = Color.White,
+        blendMode: BlendMode = BlendMode.Modulate
     )
 
     fun drawText(
@@ -112,16 +111,23 @@ interface Renderer {
 
     fun drawBackground(
         sprite: SpriteId,
-        position: Vec2 = Vec2.Zero,
-        scale: Vec2 = Vec2.from(1f),
-        config: ParallaxConfig = ParallaxConfig()
+        frame: Int = 1,
+        state: TransformState,
+        contentScale: ContentScale = ContentScale.Fit,
     )
 
     fun drawForeground(
         sprite: SpriteId,
-        position: Vec2 = Vec2.Zero,
-        scale: Vec2 = Vec2.from(1f),
-        config: ParallaxConfig = ParallaxConfig()
+        frame: Int = 1,
+        state: TransformState,
+        contentScale: ContentScale = ContentScale.Fit,
+    )
+
+    fun drawInfiniteImage(
+        spriteId: SpriteId,
+        parallaxFactor: Float = 1f,
+        contentScale: ContentScale = ContentScale.Fit,
+        deep: Int = RenderDepth.BACKGROUND
     )
 
     fun drawAxis(

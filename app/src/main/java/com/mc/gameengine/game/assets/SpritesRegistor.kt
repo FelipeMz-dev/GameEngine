@@ -1,9 +1,8 @@
 package com.mc.gameengine.game.assets
 
-import com.mc.gameengine.engine.assets.AssetsManager
+import com.mc.gameengine.engine.assets.SpriteManager
 
-fun AssetsManager.registerMainSprites() = this.apply {
+fun SpriteManager.registerMainSprites() = this.apply {
     load(SpritesMain.entries)
-    load(SpritesDinoPlayer.bat)
-    load(SpritesDinoPlayer.walk)
+    load(SpritesDinoPlayer.entries)
 }

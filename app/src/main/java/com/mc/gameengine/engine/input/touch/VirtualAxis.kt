@@ -1,4 +1,4 @@
-package com.mc.gameengine.engine.input
+package com.mc.gameengine.engine.input.touch
 
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.clamp
@@ -14,11 +14,10 @@ class VirtualAxis(
     fun onDrag(pos: Vec2) {
         val delta = (pos - center).clamp(radius)
         input.dispatch(
-            AxisEvent(
+            TouchEvent.AxisEvent(
                 id = id,
                 value = delta / radius
             )
         )
     }
 }
-

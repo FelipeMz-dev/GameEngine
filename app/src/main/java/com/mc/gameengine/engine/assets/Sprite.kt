@@ -1,10 +1,12 @@
 package com.mc.gameengine.engine.assets
 
+import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.SpriteId
+import com.mc.gameengine.engine.core.TransformState
 
 open class Sprite(
     private val sprite: SpriteDefinition,
-    var metrics: SpriteMetrics,
+    var state: TransformState = TransformState(),
     var endFrame: Int = sprite.totalFrames,
     var startFrame: Int = 0,
     var frameDuration: Float = 0.1f
@@ -29,13 +31,23 @@ open class Sprite(
         }
     }
 
-    fun update(block: (SpriteMetrics) -> SpriteMetrics) {
-        metrics = block(metrics)
+    fun update(block: (TransformState) -> TransformState) {
+        state = block(state)
+    }
+
+    fun nextFrame() {
+        currentFrame++
+        if (currentFrame > endFrame) currentFrame = startFrame
+    }
+
+    fun previousFrame() {
+        currentFrame--
+        if (currentFrame < startFrame) currentFrame = endFrame
     }
 
     fun spriteIs(id: SpriteId) = id == sprite.spriteId
 
-    fun isLastFrame() = currentFrame == endFrame
+    fun isLastFrame() = currentFrame == endFrame - 1
 
     fun stop() {
         inMovement = false

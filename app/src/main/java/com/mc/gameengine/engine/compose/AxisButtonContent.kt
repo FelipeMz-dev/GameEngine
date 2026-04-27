@@ -18,13 +18,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.mc.gameengine.engine.input.touch.TouchEvent
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.clamp
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.toOffset
-import com.mc.gameengine.engine.input.AxisEvent
-import com.mc.gameengine.engine.input.TouchManager
-import com.mc.gameengine.engine.input.VirtualAxis
+import com.mc.gameengine.engine.input.touch.TouchManager
+import com.mc.gameengine.engine.input.touch.VirtualAxis
 
 @Composable
 fun AxisButtonContent(
@@ -68,7 +68,7 @@ fun AxisButtonContent(
                     },
                     onDragEnd = {
                         touchManager.dispatch(
-                            AxisEvent(
+                            TouchEvent.AxisEvent(
                                 id = id,
                                 value = Vec2(0f, 0f)
                             )

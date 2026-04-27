@@ -16,6 +16,11 @@ import kotlin.math.sqrt
 
 data class Vec2(val x: Float, val y: Float) {
 
+    constructor(
+        x: Number = 0,
+        y: Number = 0
+    ) : this(x.toFloat(), y.toFloat())
+
     companion object {
         val Zero = Vec2(0f, 0f)
 
@@ -24,7 +29,7 @@ data class Vec2(val x: Float, val y: Float) {
             y = sin(angleRadians)
         )
 
-        fun from(value: Float) = Vec2(value, value)
+        fun from(value: Number) = Vec2(value, value)
 
         fun lerp(start: Float, end: Float, alpha: Float) = Vec2(
             x = start + (end - start) * alpha,
@@ -55,6 +60,10 @@ operator fun Vec2.div(other: Vec2): Vec2 = Vec2(this.x / other.x, this.y / other
 
 operator fun Vec2.div(scalar: Float): Vec2 = Vec2(this.x / scalar, this.y / scalar)
 
+operator fun Vec2.rem(other: Vec2): Vec2 = Vec2(this.x % other.x, this.y % other.y)
+
+operator fun Vec2.rem(scalar: Float): Vec2 = Vec2(this.x % scalar, this.y % scalar)
+
 fun Vec2.distanceTo(other: Vec2): Float = (this - other).length()
 
 fun Vec2.distanceSquaredTo(other: Vec2): Float {
@@ -79,6 +88,18 @@ fun Vec2.rotate(angleDegrees: Float): Vec2 {
     return Vec2(
         x = (this.x.toDouble() * cosTheta - this.y.toDouble() * sinTheta).toFloat(),
         y = (this.x.toDouble() * sinTheta + this.y.toDouble() * cosTheta).toFloat()
+    )
+}
+
+fun Vec2.rotateAround(center: Vec2, angleDegrees: Float): Vec2 {
+    val rad = Math.toRadians(angleDegrees.toDouble())
+    val cosTheta = cos(rad)
+    val sinTheta = sin(rad)
+    val x1 = this.x - center.x
+    val y1 = this.y - center.y
+    return Vec2(
+        x = (x1 * cosTheta - y1 * sinTheta).toFloat() + center.x,
+        y = (x1 * sinTheta + y1 * cosTheta).toFloat() + center.y
     )
 }
 

@@ -1,8 +1,4 @@
-package com.mc.gameengine.engine.input
-
-interface TouchListener {
-    fun onTouchEvent(event: TouchEvent)
-}
+package com.mc.gameengine.engine.input.touch
 
 class TouchManager {
 

@@ -9,6 +9,6 @@ data class Particle(
     var angle: Float,
     var life: Float,
     val rotation: Float,
-    val scale: Float,
+    val scale: Vec2,
     val color: Color
 )

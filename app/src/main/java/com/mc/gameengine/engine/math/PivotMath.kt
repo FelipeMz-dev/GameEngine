@@ -1,70 +1,73 @@
 package com.mc.gameengine.engine.math
 
 import com.mc.gameengine.engine.render.Pivot
+import com.mc.gameengine.engine.render.Pivot.Bottom
+import com.mc.gameengine.engine.render.Pivot.BottomLeft
+import com.mc.gameengine.engine.render.Pivot.BottomRight
+import com.mc.gameengine.engine.render.Pivot.Center
+import com.mc.gameengine.engine.render.Pivot.Custom
+import com.mc.gameengine.engine.render.Pivot.Left
+import com.mc.gameengine.engine.render.Pivot.Right
+import com.mc.gameengine.engine.render.Pivot.Top
+import com.mc.gameengine.engine.render.Pivot.TopLeft
+import com.mc.gameengine.engine.render.Pivot.TopRight
+
+fun Pivot.resolve(size: Vec2) = this.resolve(size, flipX = false, flipY = false)
 
 fun Pivot.resolve(
     size: Vec2,
-    flipX: Boolean = false,
-    flipY: Boolean = false
+    flipX: Boolean,
+    flipY: Boolean
 ): Vec2 {
     val width = size.x
     val height = size.y
 
     return when (this) {
-        Pivot.Center -> Vec2(width / 2f, height / 2f)
+        Center -> Vec2(width / 2f, height / 2f)
 
-        Pivot.Top -> {
-            val x = width / 2f
-            val y = if (flipY) height else 0f
-            Vec2(x, y)
-        }
+        Top -> Vec2(
+            x = width / 2f,
+            y = if (flipY) height else 0f
+        )
 
-        Pivot.Bottom -> {
-            val x = width / 2f
-            val y = if (flipY) 0f else height
-            Vec2(x, y)
-        }
+        Bottom -> Vec2(
+            x = width / 2f,
+            y = if (flipY) 0f else height
+        )
 
-        Pivot.Left -> {
-            val x = if (flipX) width else 0f
-            val y = height / 2f
-            Vec2(x, y)
-        }
+        Left -> Vec2(
+            x = if (flipX) width else 0f,
+            y = height / 2f
+        )
 
-        Pivot.Right -> {
-            val x = if (flipX) 0f else width
-            val y = height / 2f
-            Vec2(x, y)
-        }
+        Right -> Vec2(
+            x = if (flipX) 0f else width,
+            y = height / 2f
+        )
 
-        Pivot.TopLeft -> {
-            val x = if (flipX) width else 0f
-            val y = if (flipY) height else 0f
-            Vec2(x, y)
-        }
+        TopLeft -> Vec2(
+            x = if (flipX) width else 0f,
+            y = if (flipY) height else 0f
+        )
 
-        Pivot.TopRight -> {
-            val x = if (flipX) 0f else width
-            val y = if (flipY) height else 0f
-            Vec2(x, y)
-        }
+        TopRight -> Vec2(
+            x = if (flipX) 0f else width,
+            y = if (flipY) height else 0f
+        )
 
-        Pivot.BottomLeft -> {
-            val x = if (flipX) width else 0f
-            val y = if (flipY) 0f else height
-            Vec2(x, y)
-        }
+        BottomLeft -> Vec2(
+            x = if (flipX) width else 0f,
+            y = if (flipY) 0f else height
+        )
 
-        Pivot.BottomRight -> {
-            val x = if (flipX) 0f else width
-            val y = if (flipY) 0f else height
-            Vec2(x, y)
-        }
+        BottomRight -> Vec2(
+            x = if (flipX) 0f else width,
+            y = if (flipY) 0f else height
+        )
 
-        is Pivot.Custom -> {
-            val finalX = if (flipX) (1f - x) else x
-            val finalY = if (flipY) (1f - y) else y
-            Vec2(finalX, finalY)
-        }
+        is Custom -> Vec2(
+            x = if (flipX) width - x else x,
+            y = if (flipY) height - y else y
+        )
     }
 }

@@ -1,12 +1,6 @@
 package com.mc.gameengine.engine.compose
 
-import android.content.Context
-import android.view.KeyEvent
-import android.view.SurfaceView
-import android.view.View
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,39 +9,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.ScaleFactor
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.toSize
-import androidx.compose.ui.viewinterop.AndroidView
-import com.mc.gameengine.engine.math.toVec2
-import com.mc.gameengine.engine.assets.AssetsManager
+import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.core.GameScene
 import com.mc.gameengine.engine.input.GameInput
 import com.mc.gameengine.engine.render.VirtualResolution
 import com.mc.gameengine.engine.time.GameLoop
+import com.mc.gameengine.engine.audio.AudioManager
 
 @Composable
 fun GameSceneView(
     modifier: Modifier = Modifier,
     scene: GameScene,
-    assetsManager: AssetsManager = rememberAssetsManager(),
+    spriteManager: SpriteManager = rememberSpriteManager(),
+    audioManager: AudioManager = rememberAudioManager(),
     gameInput: GameInput = rememberGameInput(),
     contentScale: ContentScale = ContentScale.Crop,
     virtualResolution: VirtualResolution = VirtualResolution.Undefined,
-    isPaused: Boolean = false,
-    camera2D: Camera2D = remember { Camera2D(viewportSize = virtualResolution.toSize().toVec2()) }
+    camera2D: Camera2D = rememberCamera2D(virtualResolution)
 ) {
     val currentView = LocalView.current
     val loop = remember { GameLoop(scene) }
@@ -62,17 +51,17 @@ fun GameSceneView(
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
-        scene.attachAssets(assetsManager)
+        scene.attachSpriteManager(spriteManager)
+        scene.attachAudioManager(audioManager)
         scene.attachInput(gameInput)
+        scene.attachCamera2D(camera2D)
     }
 
-    LaunchedEffect(Unit, isPaused) {
+    LaunchedEffect(Unit) {
         while (true) {
             withFrameNanos { frameTime ->
-                if (!isPaused) {
-                    loop.onFrame(frameTime)
-                    frameTicker.intValue++
-                }
+                loop.onFrame(frameTime)
+                frameTicker.intValue++
             }
         }
     }
@@ -81,7 +70,7 @@ fun GameSceneView(
         clipRect(right = resolution.width, bottom = resolution.height) {
             val renderer = RendererImpl(
                 this,
-                assetsManager,
+                spriteManager,
                 textMeasurer,
                 camera2D,
             )
@@ -102,21 +91,18 @@ fun GameSceneView(
                 scene.updateViewportScale(scale)
                 scene.updateViewportSize(resolution)
             }
-            .then(
-                gameInput.touchProcessor?.let {
-                    Modifier.gameTouchInput(it)
-                } ?: Modifier
-            )
-            .then(
-                gameInput.keyboardProcessor?.run {
-                    Modifier
-                        .focusable()
-                        .focusRequester(focusRequester)
-                        .onKeyEvent {
-                            onKeyEvent(it)
-                        }
-                } ?: Modifier
-            )
+            .run {
+                val touch = gameInput.touchProcessor
+                touch?.let { gameTouchInput(touch) } ?: this
+            }
+            .run {
+                val keyboard = gameInput.keyboardProcessor
+                keyboard?.let { gameKeyboardInput(keyboard, focusRequester) } ?: this
+            }
+            .run {
+                val mouse = gameInput.mouseProcessor
+                mouse?.let { gameMouseInput(mouse) } ?: this
+            }
     ) {
         if (virtualResolution !is VirtualResolution.Undefined) {
             inset(scale.scaleX, scale.scaleY) {
