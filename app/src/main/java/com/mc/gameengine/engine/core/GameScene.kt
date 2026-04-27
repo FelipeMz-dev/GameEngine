@@ -74,6 +74,13 @@ abstract class GameScene() : WorldContext {
         collider.apply { spriteManager.loadSource() }
     }
 
+    fun attach(dependencies: SceneDependencies) {
+        attachSpriteManager(dependencies.spriteManager)
+        attachAudioManager(dependencies.audioManager)
+        attachInput(dependencies.gameInput)
+        attachCamera2D(dependencies.camera2D)
+    }
+
     fun attachSpriteManager(spriteManager: SpriteManager) {
         this.spriteManager = spriteManager
     }
