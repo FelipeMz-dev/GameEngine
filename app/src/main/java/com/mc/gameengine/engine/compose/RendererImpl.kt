@@ -277,7 +277,7 @@ class RendererImpl(
         val spriteSize = size.toVec2() / spriteManager.getSize(spriteId)
         drawSprite(
             spriteId = spriteId,
-            frame = 1,
+            frame = 0,
             state = TransformState(
                 position = position,
                 angle = 0f,

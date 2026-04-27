@@ -14,34 +14,31 @@ class SpriteManager(private val imageLoader: ImageLoader) {
     }
 
     fun load(def: SpriteDefinition) {
-        when (def) {
-            is AtlasSpriteDef -> loadAtlas(def)
-            is FrameListSpriteDef -> loadFrameList(def)
-            is SingleImageSpriteDef -> loadSingleImage(def)
-        }
+        sprites[def.spriteId] = def.toSource()
     }
 
     fun get(id: SpriteId): SpriteSource = sprites[id] ?: error("Sprite '$id' not found")
 
     private fun loadAtlas(def: AtlasSpriteDef) {
         val images = mutableListOf<ImageBitmap>()
+        val frameSize = def.resolvedFrameSize
+        require(frameSize.x > 0f && frameSize.y > 0f) {
+            "Atlas '${def.spriteId}' requires frame size > 0. " +
+                "Use srcSize or spriteWidth/spriteHeight."
+        }
+        val offset = def.resolvedOffset
+        val spacing = def.resolvedSpacing
 
         repeat(def.totalFrames) { frame ->
             val col = frame % def.columns
             val row = frame / def.columns
-            val offsetX = def.srcOffset?.x ?: 0f
-            val offsetY = def.srcOffset?.y ?: 0f
-            val width = def.srcSize?.x ?: 0f
-            val height = def.srcSize?.y ?: 0f
-            val spacingX = def.srcSpacing?.x ?: 0f
-            val spacingY = def.srcSpacing?.y ?: 0f
-            val startX = offsetX + col * (width + spacingX)
-            val startY = offsetY + row * (height + spacingY)
+            val startX = offset.x + col * (frameSize.x + spacing.x)
+            val startY = offset.y + row * (frameSize.y + spacing.y)
             val image = imageLoader.loadRes(
                 resId = def.resId,
                 hasAlpha = def.hasAlpha,
                 srcOffset = Vec2(startX, startY),
-                srcSize = Vec2(width, height)
+                srcSize = frameSize
             )
             images.add(image)
         }
@@ -69,7 +66,7 @@ class SpriteManager(private val imageLoader: ImageLoader) {
             srcOffset = def.srcOffset,
             srcSize = def.srcSize
         )
-        sprites[def.spriteId] = FrameListSprite(listOf(image))
+        sprites[def.spriteId] = SingleImageSprite(image)
     }
 
     fun getSize(id: SpriteId): Vec2 {
@@ -78,5 +75,14 @@ class SpriteManager(private val imageLoader: ImageLoader) {
             sprite.frameWidth.toFloat(),
             sprite.frameHeight.toFloat()
         )
+    }
+
+    private fun SpriteDefinition.toSource(): SpriteSource {
+        when (this) {
+            is AtlasSpriteDef -> loadAtlas(this)
+            is FrameListSpriteDef -> loadFrameList(this)
+            is SingleImageSpriteDef -> loadSingleImage(this)
+        }
+        return get(spriteId)
     }
 }

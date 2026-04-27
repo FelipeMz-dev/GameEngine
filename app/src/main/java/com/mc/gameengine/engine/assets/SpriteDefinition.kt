@@ -16,12 +16,27 @@ data class AtlasSpriteDef(
     val resId: Int,
     val columns: Int,
     val rows: Int,
+    val spriteWidth: Int? = null,
+    val spriteHeight: Int? = null,
+    val offsetX: Int = 0,
+    val offsetY: Int = 0,
+    val spacingX: Int = 0,
+    val spacingY: Int = 0,
     override val hasAlpha: Boolean = true,
     override val srcOffset: Vec2? = null,
     override val srcSize: Vec2? = null,
     val srcSpacing: Vec2? = null,
 ) : SpriteDefinition {
     override val totalFrames = columns * rows
+
+    val resolvedOffset: Vec2
+        get() = srcOffset ?: Vec2(offsetX, offsetY)
+
+    val resolvedFrameSize: Vec2
+        get() = srcSize ?: Vec2(spriteWidth ?: 0, spriteHeight ?: 0)
+
+    val resolvedSpacing: Vec2
+        get() = srcSpacing ?: Vec2(spacingX, spacingY)
 }
 
 data class FrameListSpriteDef(
