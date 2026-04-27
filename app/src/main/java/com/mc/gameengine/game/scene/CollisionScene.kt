@@ -2,6 +2,7 @@ package com.mc.gameengine.game.scene
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import com.mc.gameengine.engine.audio.AudioPlayer
 import com.mc.gameengine.engine.core.GameScene
 import com.mc.gameengine.engine.math.div
 import com.mc.gameengine.engine.render.Pivot
@@ -9,7 +10,7 @@ import com.mc.gameengine.engine.render.Renderer
 import com.mc.gameengine.game.instance.collisions.ControllableEntity
 import com.mc.gameengine.game.instance.collisions.Obstacle
 
-class CollisionScene: GameScene() {
+class CollisionScene() : GameScene() {
 
     init {
         addInstance(ControllableEntity())

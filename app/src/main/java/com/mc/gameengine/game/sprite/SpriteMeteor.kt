@@ -1,28 +1,21 @@
 package com.mc.gameengine.game.sprite
 
 import com.mc.gameengine.engine.assets.Sprite
-import com.mc.gameengine.engine.assets.SpriteMetrics
+import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.game.assets.SpritesMain
 
 class SpriteMeteor : Sprite(
     sprite = SpritesMain.meteor,
-    metrics = SpriteMetrics(
-        pivot = Pivot.Custom(
-            x = SpritesMain.meteor.spriteWidth / 2f,
-            y = SpritesMain.meteor.spriteHeight / 4f
-        ),
-        deep = 1
-    )
+    state = TransformState()
 )
 
 class SpriteExplosion : Sprite(
     sprite = SpritesMain.meteorExplosion,
-    metrics = SpriteMetrics(
+    state = TransformState(
         pivot = Pivot.Custom(
-            x = SpritesMain.meteorExplosion.spriteWidth / 2f,
-            y = SpritesMain.meteorExplosion.spriteHeight / 3.5f
-        ),
-        deep = -1
+            x = (SpritesMain.meteorExplosion.srcSize?.x ?: 0f) / 2f,
+            y = (SpritesMain.meteorExplosion.srcSize?.y ?: 0f) / 3.5f
+        )
     )
 )

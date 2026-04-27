@@ -6,6 +6,12 @@ import com.mc.gameengine.game.assets.SpritesMain
 
 class CollisionMeteor(owner: Instance): BoxCollider(
     owner = owner,
-    width = SpritesMain.meteor.spriteWidth / 1.5f,
-    height = SpritesMain.meteor.spriteHeight / 4f
+    width = (SpritesMain.meteor.srcSize?.x ?: 0f) / 1.6f,
+    height = (SpritesMain.meteor.srcSize?.y ?: 0f) / 4f
+)
+
+class CollisionExplosion(owner: Instance): BoxCollider(
+    owner = owner,
+    width = (SpritesMain.meteorExplosion.srcSize?.x ?: 0f) / 3f,
+    height = (SpritesMain.meteorExplosion.srcSize?.y ?: 0f) / 3f
 )
