@@ -24,10 +24,16 @@ import com.mc.gameengine.engine.render.VirtualResolution
 
 abstract class GameScene() : WorldContext {
 
-    private val instances = mutableListOf<Instance>()
-    private val toAdd = mutableListOf<Instance>()
-    private val toRemove = mutableListOf<Instance>()
+    private val entities = SceneEntityManager()
     private val collisionSystem = CollisionSystem()
+    private val lifecycleDispatcher = SceneLifecycleDispatcher()
+    private val fixedStepDispatcher = SceneFixedStepDispatcher()
+
+    init {
+        fixedStepDispatcher.register(CollisionSystem::class.java) {
+            collisionSystem.check()
+        }
+    }
 
     protected var camera: Camera2D? = null
     private lateinit var spriteManager: SpriteManager
@@ -47,15 +53,15 @@ abstract class GameScene() : WorldContext {
     override fun viewportScale() = viewportScale
 
     override fun addInstance(instance: Instance) {
-        toAdd += instance
+        entities.enqueueAdd(instance)
     }
 
     override fun deleteInstance(instance: Instance) {
-        toRemove += instance
+        entities.enqueueRemove(instance)
     }
 
     protected fun deleteAllInstances(block: (Instance) -> Boolean) {
-        toRemove.addAll(instances.filter(block))
+        entities.enqueueRemoveWhere(block)
     }
 
     override fun addCollider(collider: Collider) {
@@ -75,16 +81,36 @@ abstract class GameScene() : WorldContext {
         collider.apply { spriteManager.loadSource() }
     }
 
+    fun attach(dependencies: SceneDependencies) {
+        attachSpriteManager(dependencies.spriteManager)
+        attachAudioManager(dependencies.audioManager)
+        attachInput(dependencies.gameInput)
+        attachCamera2D(dependencies.camera2D)
+    }
+
     fun attachSpriteManager(spriteManager: SpriteManager) {
         this.spriteManager = spriteManager
     }
 
     fun attachAudioManager(audioManager: AudioManager) {
         this.audioManager = audioManager
+        lifecycleDispatcher.register(
+            key = AudioManager::class.java,
+            onAdded = audioManager::registerListener,
+            onRemoved = audioManager::unregisterListener
+        )
     }
 
     fun attachInput(gameInput: GameInput) {
         this.gameInput = gameInput
+        lifecycleDispatcher.register(
+            key = GameInput::class.java,
+            onAdded = gameInput::register,
+            onRemoved = gameInput::unregister
+        )
+        fixedStepDispatcher.register(GameInput::class.java) { dt ->
+            gameInput.keyboardProcessor?.update(dt)
+        }
     }
 
     fun attachCamera2D(camera: Camera2D) {
@@ -133,24 +159,23 @@ abstract class GameScene() : WorldContext {
 
     open fun update(dt: Float) {
         syncInstances()
-        instances.forEach { it.update(dt) }
+        entities.forEach { it.update(dt) }
     }
 
     open fun fixedUpdate(dt: Float) {
         syncInstances()
-        instances.forEach {
+        entities.forEach {
             it.snapshot()
             it.fixedUpdate(dt)
         }
-        gameInput.keyboardProcessor?.update(dt)
-        collisionSystem.check()
+        fixedStepDispatcher.dispatch(dt)
     }
 
     open fun render(
         renderer: Renderer,
         alpha: Float
     ) {
-        instances.forEach {
+        entities.forEach {
             it.apply { renderer.render(alpha) }
             //renderer.debug(it)
         }
@@ -158,25 +183,16 @@ abstract class GameScene() : WorldContext {
     }
 
     private fun syncInstances() {
-        if (toRemove.isNotEmpty()) {
-            toRemove.forEach { instance ->
-                instances -= instance
+        entities.sync(
+            onRemoved = { instance ->
                 instance.onRemovedFromScene()
-                gameInput.unregister(instance)
-                audioManager.unregisterListener(instance)
-            }
-            toRemove.clear()
-        }
-
-        if (toAdd.isNotEmpty()) {
-            toAdd.forEach { instance ->
-                instances += instance
+                lifecycleDispatcher.notifyRemoved(instance)
+            },
+            onAdded = { instance ->
                 instance.onAddedToScene(this)
-                gameInput.register(instance)
-                audioManager.registerListener(instance)
+                lifecycleDispatcher.notifyAdded(instance)
             }
-            toAdd.clear()
-        }
+        )
     }
 
     private fun Renderer.debug(instance: Instance) {

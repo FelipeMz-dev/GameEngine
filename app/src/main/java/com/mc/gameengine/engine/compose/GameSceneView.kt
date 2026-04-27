@@ -22,6 +22,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.toSize
 import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.core.GameScene
+import com.mc.gameengine.engine.core.SceneDependencies
 import com.mc.gameengine.engine.input.GameInput
 import com.mc.gameengine.engine.render.VirtualResolution
 import com.mc.gameengine.engine.time.GameLoop
@@ -51,10 +52,14 @@ fun GameSceneView(
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
-        scene.attachSpriteManager(spriteManager)
-        scene.attachAudioManager(audioManager)
-        scene.attachInput(gameInput)
-        scene.attachCamera2D(camera2D)
+        scene.attach(
+            SceneDependencies(
+                spriteManager = spriteManager,
+                audioManager = audioManager,
+                gameInput = gameInput,
+                camera2D = camera2D
+            )
+        )
     }
 
     LaunchedEffect(Unit) {
