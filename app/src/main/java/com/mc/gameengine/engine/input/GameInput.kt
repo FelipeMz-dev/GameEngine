@@ -18,7 +18,8 @@ class GameInput private constructor(
     val touchProcessor: TouchProcessor?,
     val sensorProcessor: SensorProcessor?,
     val keyboardProcessor: KeyboardProcessor?,
-    val mouseProcessor: MouseProcessor?
+    val mouseProcessor: MouseProcessor?,
+    private val bindings: List<InstanceBinding>
 ) {
     class Builder {
         private var touchProcessor: TouchProcessor? = null
@@ -26,57 +27,74 @@ class GameInput private constructor(
         private var keyboardProcessor: KeyboardProcessor? = null
         private var mouseProcessor: MouseProcessor? = null
 
+        private val bindingsByType = linkedMapOf<Class<*>, InstanceBinding>()
+
         fun withTouch(manager: TouchManager) = apply {
             this.touchProcessor = TouchProcessor(manager)
+            bind(
+                TouchListener::class.java,
+                ListenerBinding(
+                    listenerClass = TouchListener::class.java,
+                    onRegister = manager::register,
+                    onUnregister = manager::unregister
+                )
+            )
         }
 
         fun withSensor(manager: SensorManager) = apply {
             this.sensorProcessor = SensorProcessor(manager)
+            bind(
+                SensorListener::class.java,
+                ListenerBinding(
+                    listenerClass = SensorListener::class.java,
+                    onRegister = manager::register,
+                    onUnregister = manager::unregister
+                )
+            )
         }
 
         fun withKeyboard(manager: KeyboardManager) = apply {
             this.keyboardProcessor = KeyboardProcessor(manager)
+            bind(
+                KeyboardListener::class.java,
+                ListenerBinding(
+                    listenerClass = KeyboardListener::class.java,
+                    onRegister = manager::register,
+                    onUnregister = manager::unregister
+                )
+            )
         }
 
         fun withMouse(manager: MouseManager) = apply {
             this.mouseProcessor = MouseProcessor(manager)
+            bind(
+                MouseListener::class.java,
+                ListenerBinding(
+                    listenerClass = MouseListener::class.java,
+                    onRegister = manager::register,
+                    onUnregister = manager::unregister
+                )
+            )
         }
 
         fun build() = GameInput(
-            touchProcessor,
-            sensorProcessor,
-            keyboardProcessor,
-            mouseProcessor
+            touchProcessor = touchProcessor,
+            sensorProcessor = sensorProcessor,
+            keyboardProcessor = keyboardProcessor,
+            mouseProcessor = mouseProcessor,
+            bindings = bindingsByType.values.toList()
         )
+
+        private fun <T : Any> bind(type: Class<T>, binding: InstanceBinding) {
+            bindingsByType[type] = binding
+        }
     }
 
     fun register(instance: Instance) {
-        if (instance is TouchListener) {
-            touchProcessor?.touchManager?.register(instance)
-        }
-        if (instance is SensorListener) {
-            sensorProcessor?.sensorManager?.register(instance)
-        }
-        if (instance is KeyboardListener) {
-            keyboardProcessor?.keyboardManager?.register(instance)
-        }
-        if (instance is MouseListener) {
-            mouseProcessor?.mouseManager?.register(instance)
-        }
+        bindings.forEach { it.register(instance) }
     }
 
     fun unregister(instance: Instance) {
-        if (instance is TouchListener) {
-            touchProcessor?.touchManager?.unregister(instance)
-        }
-        if (instance is SensorListener) {
-            sensorProcessor?.sensorManager?.unregister(instance)
-        }
-        if (instance is KeyboardListener) {
-            keyboardProcessor?.keyboardManager?.unregister(instance)
-        }
-        if (instance is MouseListener) {
-            mouseProcessor?.mouseManager?.unregister(instance)
-        }
+        bindings.forEach { it.unregister(instance) }
     }
 }

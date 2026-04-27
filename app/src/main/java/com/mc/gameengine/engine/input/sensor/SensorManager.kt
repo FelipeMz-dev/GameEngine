@@ -1,8 +1,10 @@
 package com.mc.gameengine.engine.input.sensor
 
+import com.mc.gameengine.engine.input.ListenerRegistry
+
 class SensorManager {
 
-    private val listeners = mutableSetOf<SensorListener>()
+    private val listeners = ListenerRegistry<SensorListener>()
 
     fun register(listener: SensorListener) {
         listeners.add(listener)
