@@ -31,6 +31,7 @@ abstract class GameScene() : WorldContext {
     private lateinit var spriteManager: SpriteManager
     private lateinit var audioManager: AudioManager
     private lateinit var gameInput: GameInput
+    private val lifecycleDispatcher = SceneLifecycleDispatcher()
 
     override val audioPlayer: AudioPlayer
         get() = audioManager
@@ -79,10 +80,20 @@ abstract class GameScene() : WorldContext {
 
     fun attachAudioManager(audioManager: AudioManager) {
         this.audioManager = audioManager
+        lifecycleDispatcher.register(
+            key = AudioManager::class.java,
+            onAdded = audioManager::registerListener,
+            onRemoved = audioManager::unregisterListener
+        )
     }
 
     fun attachInput(gameInput: GameInput) {
         this.gameInput = gameInput
+        lifecycleDispatcher.register(
+            key = GameInput::class.java,
+            onAdded = gameInput::register,
+            onRemoved = gameInput::unregister
+        )
     }
 
     fun attachCamera2D(camera: Camera2D) {
@@ -159,13 +170,11 @@ abstract class GameScene() : WorldContext {
         entities.sync(
             onRemoved = { instance ->
                 instance.onRemovedFromScene()
-                gameInput.unregister(instance)
-                audioManager.unregisterListener(instance)
+                lifecycleDispatcher.notifyRemoved(instance)
             },
             onAdded = { instance ->
                 instance.onAddedToScene(this)
-                gameInput.register(instance)
-                audioManager.registerListener(instance)
+                lifecycleDispatcher.notifyAdded(instance)
             }
         )
     }
