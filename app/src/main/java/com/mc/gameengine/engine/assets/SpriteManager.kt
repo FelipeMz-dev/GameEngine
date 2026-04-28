@@ -43,7 +43,7 @@ class SpriteManager(private val imageLoader: ImageLoader) {
             images.add(image)
         }
 
-        return FrameListSprite(images)
+        return SpriteSource.FrameListSprite(images)
     }
 
     private fun loadFrameList(def: FrameListSpriteDef): SpriteSource {
@@ -56,7 +56,7 @@ class SpriteManager(private val imageLoader: ImageLoader) {
             )
         }
 
-        return FrameListSprite(images)
+        return SpriteSource.FrameListSprite(images)
     }
 
     private fun loadSingleImage(def: SingleImageSpriteDef): SpriteSource {
@@ -66,7 +66,7 @@ class SpriteManager(private val imageLoader: ImageLoader) {
             srcOffset = def.srcOffset,
             srcSize = def.srcSize
         )
-        return SingleImageSprite(image)
+        return SpriteSource.SingleImageSprite(image)
     }
 
     fun getSize(id: SpriteId): Vec2 {
