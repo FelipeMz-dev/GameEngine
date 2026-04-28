@@ -10,9 +10,8 @@ import com.mc.gameengine.engine.collision.EllipseCollider
 import com.mc.gameengine.engine.collision.PolygonalCollider
 import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.input.KeyHeld
-import com.mc.gameengine.engine.input.KeyboardEvent
-import com.mc.gameengine.engine.input.KeyboardListener
+import com.mc.gameengine.engine.input.keyboard.KeyboardEvent
+import com.mc.gameengine.engine.input.keyboard.KeyboardListener
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.minus
 import com.mc.gameengine.engine.math.plus
@@ -60,14 +59,16 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
 
     override fun Renderer.onRender(state: TransformState) {
         drawOval(
-            position = centerCollider,
+            state = TransformState(
+                position = centerCollider,
+                pivot = Pivot.Center
+            ),
             size = Vec2.from(50f),
-            color = when (collisioned){
+            color = when (collisioned) {
                 is EllipseCollider -> Color.Green
                 is BoxCollider -> Color.Blue
                 else -> Color.Red
             },
-            pivot = Pivot.Center
         )
 
         drawText(
@@ -83,7 +84,7 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
 
     override fun onKeyEvent(event: KeyboardEvent) {
         when (event) {
-            is KeyHeld -> {
+            is KeyboardEvent.KeyHeld -> {
                 when (event.key) {
                     Key.A -> collider.update { it.copy(angle = it.angle + rotation * event.dt) }
                     Key.S -> collider.update { it.copy(angle = it.angle - rotation * event.dt) }

@@ -3,15 +3,14 @@ package com.mc.gameengine.game.instance
 import androidx.compose.ui.graphics.Color
 import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.TransformState
+import com.mc.gameengine.engine.input.sensor.SensorEvent
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.clamp
 import com.mc.gameengine.engine.math.div
 import com.mc.gameengine.engine.math.minus
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.times
-import com.mc.gameengine.engine.input.AccelerometerEvent
-import com.mc.gameengine.engine.input.SensorEvent
-import com.mc.gameengine.engine.input.SensorListener
+import com.mc.gameengine.engine.input.sensor.SensorListener
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
@@ -34,7 +33,7 @@ class MovingSphere : Instance(), SensorListener {
 
     override fun onSensorEvent(event: SensorEvent) {
         when (event) {
-            is AccelerometerEvent -> {
+            is SensorEvent.AccelerometerEvent -> {
                 sensorState = "State: " +
                         "\npitch: ${event.value.x}" +
                         "\nroll: ${event.value.y}" +
@@ -42,6 +41,7 @@ class MovingSphere : Instance(), SensorListener {
                         "\nsize: ${viewportSize()}"
                 physics = physics.copy(Vec2(event.value.y, event.value.x) * speed)
             }
+
             else -> Unit
         }
     }
@@ -54,9 +54,11 @@ class MovingSphere : Instance(), SensorListener {
 
     override fun Renderer.onRender(state: TransformState) {
         drawCircle(
-            position = state.position,
+            state = TransformState(
+                position = state.position,
+                pivot = Pivot.Center
+            ),
             radius = 50f,
-            pivot = Pivot.Center,
             color = Color.Red
         )
 
