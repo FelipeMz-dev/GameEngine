@@ -29,7 +29,8 @@ import com.mc.gameengine.engine.render.Renderer
 import kotlin.math.max
 
 class BallLauncher(
-    private val launchPoint: Vec2 = Vec2(180f, 620f)
+    private val launchPoint: Vec2 = Vec2(180f, 620f),
+    private val floorY: Float = 700f
 ) : Instance(), TouchListener {
 
     private val ballSpecs = listOf(
@@ -54,7 +55,8 @@ class BallLauncher(
             ProjectileBall(
                 start = launchPoint,
                 velocity = launchVelocity,
-                spec = spec
+                spec = spec,
+                floorY = floorY
             )
         )
     }
@@ -85,7 +87,8 @@ data class BallSpec(
 class ProjectileBall(
     private val start: Vec2,
     private val velocity: Vec2,
-    private val spec: BallSpec
+    private val spec: BallSpec,
+    private val floorY: Float
 ) : Instance(), CollisionListener {
 
     private val collider: Collider = EllipseCollider(this, spec.radius * 2f, spec.radius * 2f)
@@ -105,7 +108,7 @@ class ProjectileBall(
         updateVelocity { velocity }
 
         collider.setBodyType(CollisionBodyType.Dynamic)
-        collider.setCollisionFilter(layer = CollisionLayers.Player, mask = CollisionLayers.World)
+        collider.setCollisionFilter(layer = CollisionLayers.Player, mask = CollisionLayers.World or CollisionLayers.Player)
         collider.update { it.copy(position = current.position, pivot = Pivot.Center) }
         addCollider(collider)
     }
@@ -113,9 +116,10 @@ class ProjectileBall(
     override fun fixedUpdate(dt: Float) {
         livedSeconds += dt
         computePosition(dt)
+        resolveFloorBounce()
         collider.update { it.copy(position = current.position) }
 
-        if (livedSeconds >= 10f || current.position.y > viewportSize().y + 250f) {
+        if (livedSeconds >= 10f || isOutOfScreen()) {
             deleteInstance(this)
         }
     }
@@ -127,12 +131,20 @@ class ProjectileBall(
 
     override fun onCollision(event: CollisionEvent) {
         if (event.phase != CollisionPhase.Enter) return
-        val block = event.other.owner as? StackBlock ?: return
-        block.applyHitImpulse(impactImpulse())
-        bounceAgainst(block)
+        when (val otherOwner = event.other.owner) {
+            is StackBlock -> {
+                otherOwner.applyHitImpulse(impactImpulse())
+                bounceAgainstBlock(otherOwner)
+            }
+            is ProjectileBall -> {
+                if (System.identityHashCode(this) < System.identityHashCode(otherOwner)) {
+                    bounceAgainstBall(otherOwner)
+                }
+            }
+        }
     }
 
-    private fun bounceAgainst(block: StackBlock) {
+    private fun bounceAgainstBlock(block: StackBlock) {
         val incomingVelocity = physicsState().velocity
         val collisionNormal = (position() - block.centerPosition()).normalized()
         val normal = if (collisionNormal.length() <= 0.001f) Vec2(0f, -1f) else collisionNormal
@@ -150,6 +162,48 @@ class ProjectileBall(
 
         current = current.copy(position = current.position + normal * 3f)
         setVelocity(bouncedVelocity)
+    }
+
+    private fun bounceAgainstBall(other: ProjectileBall) {
+        val normalRaw = (position() - other.position())
+        val normal = if (normalRaw.length() <= 0.001f) Vec2(1f, 0f) else normalRaw.normalized()
+        val v1 = physicsState().velocity
+        val v2 = other.physicsState().velocity
+        val v1n = v1.dot(normal)
+        val v2n = v2.dot(normal)
+        if (v1n - v2n >= 0f) return
+
+        val m1 = max(spec.mass, 0.1f)
+        val m2 = max(other.spec.mass, 0.1f)
+        val restitution = 0.72f
+
+        val nextV1n = ((m1 - restitution * m2) * v1n + (1f + restitution) * m2 * v2n) / (m1 + m2)
+        val nextV2n = ((m2 - restitution * m1) * v2n + (1f + restitution) * m1 * v1n) / (m1 + m2)
+
+        val correctedV1 = v1 + normal * (nextV1n - v1n)
+        val correctedV2 = v2 + normal * (nextV2n - v2n)
+        setVelocity(correctedV1 * 0.96f)
+        other.setVelocity(correctedV2 * 0.96f)
+    }
+
+    private fun resolveFloorBounce() {
+        val bottom = current.position.y + spec.radius
+        if (bottom < floorY) return
+        current = current.copy(position = current.position.copy(y = floorY - spec.radius))
+        val velocity = physicsState().velocity
+        if (velocity.y > 0f) {
+            val restitution = (0.36f + (spec.mass / 3f) * 0.18f).coerceIn(0.3f, 0.58f)
+            setVelocity(Vec2(velocity.x * 0.92f, -velocity.y * restitution))
+        }
+    }
+
+    private fun isOutOfScreen(): Boolean {
+        val margin = 180f
+        val view = viewportSize()
+        return current.position.x < -margin ||
+            current.position.x > view.x + margin ||
+            current.position.y < -margin ||
+            current.position.y > view.y + margin
     }
 
     private fun position(): Vec2 = current.position

@@ -13,7 +13,7 @@ class CollisionScene : GameScene() {
     private val floorY = 700f
 
     init {
-        addInstance(BallLauncher(launchPoint = Vec2(180f, floorY - 30f)))
+        addInstance(BallLauncher(launchPoint = Vec2(180f, floorY - 30f), floorY = floorY))
         buildStructure()
     }
 
