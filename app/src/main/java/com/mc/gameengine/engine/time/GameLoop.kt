@@ -6,6 +6,10 @@ import com.mc.gameengine.engine.core.GameScene
 
 internal class GameLoop(private val scene: GameScene) {
 
+    fun alignClock(frameTimeNanos: Long) {
+        time.alignTo(frameTimeNanos)
+    }
+
     private val time = GameTime()
 
     fun onFrame(frameTimeNanos: Long) {

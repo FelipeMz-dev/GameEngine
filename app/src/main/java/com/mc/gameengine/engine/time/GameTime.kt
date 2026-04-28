@@ -12,6 +12,14 @@ internal class GameTime {
 
     private var lastFrameTime = 0L
 
+
+    fun alignTo(frameTimeNanos: Long) {
+        lastFrameTime = frameTimeNanos
+        deltaTime = 0f
+        accumulator = 0f
+        alpha = 0f
+    }
+
     fun fixedUpdate(frameTimeNanos: Long) {
         if (lastFrameTime == 0L) {
             lastFrameTime = frameTimeNanos

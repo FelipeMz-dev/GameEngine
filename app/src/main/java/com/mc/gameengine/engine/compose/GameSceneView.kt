@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
@@ -42,6 +43,8 @@ fun GameSceneView(
     val currentView = LocalView.current
     val loop = remember { GameLoop(scene) }
     val frameTicker = remember { mutableIntStateOf(0) }
+    val sceneAttached = remember { mutableStateOf(false) }
+    val viewportReady = remember { mutableStateOf(false) }
     var resolution = remember { virtualResolution }
     var scale = remember { ScaleFactor.Unspecified }
     val textMeasurer = rememberTextMeasurer()
@@ -60,12 +63,18 @@ fun GameSceneView(
                 camera2D = camera2D
             )
         )
+        sceneAttached.value = true
     }
 
     LaunchedEffect(Unit) {
         while (true) {
             withFrameNanos { frameTime ->
-                loop.onFrame(frameTime)
+                val engineReady = sceneAttached.value && viewportReady.value
+                if (engineReady) {
+                    loop.onFrame(frameTime)
+                } else {
+                    loop.alignClock(frameTime)
+                }
                 frameTicker.intValue++
             }
         }
@@ -95,6 +104,7 @@ fun GameSceneView(
                 )
                 scene.updateViewportScale(scale)
                 scene.updateViewportSize(resolution)
+                viewportReady.value = it.width > 0 && it.height > 0 && scale != ScaleFactor.Unspecified
             }
             .run {
                 val touch = gameInput.touchProcessor
@@ -109,15 +119,18 @@ fun GameSceneView(
                 mouse?.let { gameMouseInput(mouse) } ?: this
             }
     ) {
-        if (virtualResolution !is VirtualResolution.Undefined) {
-            inset(scale.scaleX, scale.scaleY) {
-                withTransform(
-                    transformBlock = {
-                        scale(scale.scaleX, scale.scaleY, Offset.Zero)
-                    }
-                ) { render() }
-            }
-        } else render()
+        val engineReady = sceneAttached.value && viewportReady.value
+        if (engineReady) {
+            if (virtualResolution !is VirtualResolution.Undefined) {
+                inset(scale.scaleX, scale.scaleY) {
+                    withTransform(
+                        transformBlock = {
+                            scale(scale.scaleX, scale.scaleY, Offset.Zero)
+                        }
+                    ) { render() }
+                }
+            } else render()
+        }
         frameTicker.intValue
     }
 
