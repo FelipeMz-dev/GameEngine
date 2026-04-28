@@ -20,6 +20,7 @@ import com.mc.gameengine.engine.math.clamp
 import com.mc.gameengine.engine.math.div
 import com.mc.gameengine.engine.math.dot
 import com.mc.gameengine.engine.math.minus
+import com.mc.gameengine.engine.math.normalized
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.physics.PhysicsSimulationMode
@@ -128,6 +129,33 @@ class ProjectileBall(
         if (event.phase != CollisionPhase.Enter) return
         val block = event.other.owner as? StackBlock ?: return
         block.applyHitImpulse(impactImpulse())
+        bounceAgainst(block)
+    }
+
+    private fun bounceAgainst(block: StackBlock) {
+        val incomingVelocity = physicsState().velocity
+        val collisionNormal = (position() - block.centerPosition()).normalized()
+        val normal = if (collisionNormal.length() <= 0.001f) Vec2(0f, -1f) else collisionNormal
+
+        val velocityOnNormal = incomingVelocity.dot(normal)
+        if (velocityOnNormal >= 0f) return
+
+        val tangentComponent = incomingVelocity - normal * velocityOnNormal
+        val restitution = block.bounceRestitution(
+            ballMass = spec.mass,
+            impactSpeed = incomingVelocity.length(),
+            impactNormalSpeed = kotlin.math.abs(velocityOnNormal)
+        )
+        val bouncedVelocity = tangentComponent * 0.92f - normal * velocityOnNormal * restitution
+
+        current = current.copy(position = current.position + normal * 3f)
+        setVelocity(bouncedVelocity)
+    }
+
+    private fun position(): Vec2 = current.position
+
+    private fun setVelocity(velocity: Vec2) {
+        updateVelocity { velocity }
     }
 
     override fun Renderer.onRender(state: TransformState) {
@@ -189,16 +217,24 @@ class StackBlock(
         updateVelocity { it + normalizedByMass }
     }
 
+    fun centerPosition(): Vec2 = current.position
+
+    fun bounceRestitution(
+        ballMass: Float,
+        impactSpeed: Float,
+        impactNormalSpeed: Float
+    ): Float {
+        val heavyBlockFactor = (mass / (mass + max(ballMass, 0.1f))).coerceIn(0.2f, 0.9f)
+        val impactFactor = (impactNormalSpeed / 900f).coerceIn(0f, 1f)
+        val speedFactor = (impactSpeed / 1200f).coerceIn(0f, 1f)
+        return (0.18f + heavyBlockFactor * 0.37f + impactFactor * 0.25f + speedFactor * 0.1f)
+            .coerceIn(0.2f, 0.88f)
+    }
+
     override fun onCollision(event: CollisionEvent) {
         if (event.phase != CollisionPhase.Enter && event.phase != CollisionPhase.Stay) return
 
         when (val otherOwner = event.other.owner) {
-            is ProjectileBall -> {
-                if (event.phase == CollisionPhase.Enter) {
-                    applyHitImpulse(otherOwner.impactImpulse())
-                }
-            }
-
             is StackBlock -> {
                 if (otherOwner === this) return
                 if (System.identityHashCode(this) < System.identityHashCode(otherOwner)) {
