@@ -39,11 +39,11 @@ import androidx.compose.ui.unit.dp
 import com.mc.gameengine.core.time.GameTime
 import com.mc.gameengine.core.time.TimeConfig
 import com.mc.gameengine.engine.assets.AtlasSpriteDef
-import com.mc.gameengine.engine.assets.FrameListSprite
 import com.mc.gameengine.engine.assets.FrameListSpriteDef
 import com.mc.gameengine.engine.assets.ImageLoaderImpl
 import com.mc.gameengine.engine.assets.SpriteDefinition
 import com.mc.gameengine.engine.assets.SpriteManager
+import com.mc.gameengine.engine.assets.SpriteSource
 import com.mc.gameengine.engine.compose.drawSpriteInternal
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.render.ImageLoader
@@ -97,9 +97,9 @@ private fun ContentPreviewAnimation(
         val imageLoader: ImageLoader = ImageLoaderImpl(resources)
         SpriteManager(imageLoader).apply { load(def) }
     }
-    val sprite: FrameListSprite? = remember(manager, def.spriteId) {
+    val sprite: SpriteSource? = remember(manager, def.spriteId) {
         runCatching {
-            manager.get(def.spriteId) as? FrameListSprite
+            manager.get(def.spriteId)
         }.getOrNull()
     }
 
@@ -151,7 +151,7 @@ private fun ContentPreviewAnimation(
         ) {
             withTransform({ scale(2f, 2f, Offset.Zero) }) {
                 drawSpriteInternal(
-                    image = sprite.images[frame.intValue],
+                    image = sprite.frameAt(frame.intValue) ?: return@withTransform,
                     state = TransformState(),
                     colorFilter = ColorFilter.tint(
                         color = Color.White,

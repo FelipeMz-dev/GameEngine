@@ -81,7 +81,7 @@ interface Renderer {
     fun drawSprite(
         spriteId: SpriteId,
         state: TransformState,
-        frame: Int = 1,
+        frame: Int = 0,
         deep: Int = 0,
         color: Color = Color.White,
         blendMode: BlendMode = BlendMode.Modulate
@@ -111,14 +111,14 @@ interface Renderer {
 
     fun drawBackground(
         sprite: SpriteId,
-        frame: Int = 1,
+        frame: Int = 0,
         state: TransformState,
         contentScale: ContentScale = ContentScale.Fit,
     )
 
     fun drawForeground(
         sprite: SpriteId,
-        frame: Int = 1,
+        frame: Int = 0,
         state: TransformState,
         contentScale: ContentScale = ContentScale.Fit,
     )

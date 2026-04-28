@@ -7,7 +7,7 @@ import com.mc.gameengine.engine.core.TransformState
 open class Sprite(
     private val sprite: SpriteDefinition,
     var state: TransformState = TransformState(),
-    var endFrame: Int = sprite.totalFrames,
+    var endFrame: Int = sprite.totalFrames - 1,
     var startFrame: Int = 0,
     var frameDuration: Float = 0.1f
 ) {
@@ -47,7 +47,7 @@ open class Sprite(
 
     fun spriteIs(id: SpriteId) = id == sprite.spriteId
 
-    fun isLastFrame() = currentFrame == endFrame - 1
+    fun isLastFrame() = currentFrame == endFrame
 
     fun stop() {
         inMovement = false
@@ -57,4 +57,3 @@ open class Sprite(
         inMovement = true
     }
 }
-
