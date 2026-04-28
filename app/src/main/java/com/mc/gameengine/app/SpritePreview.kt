@@ -47,12 +47,11 @@ import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.compose.drawSpriteInternal
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.render.ImageLoader
-import com.mc.gameengine.game.assets.SpritesMain
 
 @Preview(device = "id:tv_4k")
 @Composable
 fun Preview() {
-    SpritePreview(SpritesMain.portal)
+    //SpritePreview(SpritesMain.portal)
 }
 
 @Composable
