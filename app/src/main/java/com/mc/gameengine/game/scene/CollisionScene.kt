@@ -18,28 +18,38 @@ class CollisionScene : GameScene() {
     }
 
     private fun buildStructure() {
-        val blockWidth = 76f
-        val blockHeight = 44f
-        val baseX = 880f
-        val spacing = 10f
+        val woodLight = Color(0xFFD7B899)
+        val woodDark = Color(0xFFB58B66)
 
-        repeat(4) { row ->
-            val blocksInRow = 4 - row
-            val offsetX = (row * (blockWidth + spacing)) / 2f
-            repeat(blocksInRow) { col ->
-                addInstance(
-                    StackBlock(
-                        start = Vec2(
-                            x = baseX + offsetX + col * (blockWidth + spacing),
-                            y = floorY - blockHeight / 2f - row * (blockHeight + 8f)
-                        ),
-                        size = Vec2(blockWidth, blockHeight),
-                        mass = 1.4f + row * 0.4f,
-                        color = if ((row + col) % 2 == 0) Color(0xFFBCAAA4) else Color(0xFFA1887F),
-                        floorY = floorY
-                    )
+        val blockSpecs = listOf(
+            // Base: 3 columnas verticales pesadas.
+            BlockSpec(Vec2(860f, floorY - 60f), Vec2(36f, 120f), 2.8f, woodDark),
+            BlockSpec(Vec2(940f, floorY - 60f), Vec2(36f, 120f), 2.4f, woodLight),
+            BlockSpec(Vec2(1020f, floorY - 60f), Vec2(36f, 120f), 3.0f, woodDark),
+
+            // Primer nivel: vigas horizontales más ligeras.
+            BlockSpec(Vec2(900f, floorY - 138f), Vec2(150f, 34f), 1.5f, woodLight),
+            BlockSpec(Vec2(980f, floorY - 138f), Vec2(150f, 34f), 1.3f, woodLight),
+
+            // Segundo nivel: dos columnas medianas.
+            BlockSpec(Vec2(900f, floorY - 216f), Vec2(34f, 120f), 2.1f, woodDark),
+            BlockSpec(Vec2(980f, floorY - 216f), Vec2(34f, 120f), 1.9f, woodDark),
+
+            // Cima: viga horizontal liviana + bloque corto superior.
+            BlockSpec(Vec2(940f, floorY - 292f), Vec2(170f, 30f), 1.2f, woodLight),
+            BlockSpec(Vec2(940f, floorY - 340f), Vec2(56f, 70f), 1.0f, woodDark),
+        )
+
+        blockSpecs.forEach { spec ->
+            addInstance(
+                StackBlock(
+                    start = spec.position,
+                    size = spec.size,
+                    mass = spec.mass,
+                    color = spec.color,
+                    floorY = floorY
                 )
-            }
+            )
         }
     }
 
@@ -55,3 +65,10 @@ class CollisionScene : GameScene() {
         super.render(renderer, alpha)
     }
 }
+
+private data class BlockSpec(
+    val position: Vec2,
+    val size: Vec2,
+    val mass: Float,
+    val color: Color
+)

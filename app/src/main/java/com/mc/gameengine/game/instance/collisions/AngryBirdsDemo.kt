@@ -18,6 +18,7 @@ import com.mc.gameengine.engine.input.touch.TouchListener
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.clamp
 import com.mc.gameengine.engine.math.div
+import com.mc.gameengine.engine.math.dot
 import com.mc.gameengine.engine.math.minus
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.times
@@ -189,14 +190,71 @@ class StackBlock(
     }
 
     override fun onCollision(event: CollisionEvent) {
-        if (event.phase != CollisionPhase.Enter) return
-        val other = event.other.owner as? StackBlock ?: return
-        if (other === this) return
+        if (event.phase != CollisionPhase.Enter && event.phase != CollisionPhase.Stay) return
 
-        val transfer = physicsState().velocity * 0.3f
-        if (transfer.length() > 10f) {
-            other.applyHitImpulse(transfer * other.mass)
+        when (val otherOwner = event.other.owner) {
+            is ProjectileBall -> {
+                if (event.phase == CollisionPhase.Enter) {
+                    applyHitImpulse(otherOwner.impactImpulse())
+                }
+            }
+
+            is StackBlock -> {
+                if (otherOwner === this) return
+                if (System.identityHashCode(this) < System.identityHashCode(otherOwner)) {
+                    resolveBlockCollision(otherOwner)
+                }
+            }
         }
+    }
+
+    private fun resolveBlockCollision(other: StackBlock) {
+        val delta = other.position() - position()
+        val overlapX = (size.x + other.size.x) * 0.5f - kotlin.math.abs(delta.x)
+        val overlapY = (size.y + other.size.y) * 0.5f - kotlin.math.abs(delta.y)
+
+        if (overlapX <= 0f || overlapY <= 0f) return
+
+        val normal = if (overlapX < overlapY) {
+            val sign = if (delta.x >= 0f) 1f else -1f
+            translate(Vec2(-overlapX * 0.5f * sign, 0f))
+            other.translate(Vec2(overlapX * 0.5f * sign, 0f))
+            Vec2(sign, 0f)
+        } else {
+            val sign = if (delta.y >= 0f) 1f else -1f
+            translate(Vec2(0f, -overlapY * 0.5f * sign))
+            other.translate(Vec2(0f, overlapY * 0.5f * sign))
+            Vec2(0f, sign)
+        }
+
+        val v1 = velocity()
+        val v2 = other.velocity()
+        val v1n = v1.dot(normal)
+        val v2n = v2.dot(normal)
+        val m1 = max(mass, 0.1f)
+        val m2 = max(other.mass, 0.1f)
+
+        val nextV1n = ((m1 - m2) * v1n + 2f * m2 * v2n) / (m1 + m2)
+        val nextV2n = ((m2 - m1) * v2n + 2f * m1 * v1n) / (m1 + m2)
+
+        val correction1 = normal * (nextV1n - v1n) * 0.85f
+        val correction2 = normal * (nextV2n - v2n) * 0.85f
+
+        setVelocity(v1 + correction1)
+        other.setVelocity(v2 + correction2)
+    }
+
+    private fun position(): Vec2 = current.position
+
+    private fun velocity(): Vec2 = physicsState().velocity
+
+    private fun translate(delta: Vec2) {
+        current = current.copy(position = current.position + delta)
+        collider.update { it.copy(position = current.position) }
+    }
+
+    private fun setVelocity(velocity: Vec2) {
+        updateVelocity { velocity }
     }
 
     override fun Renderer.onRender(state: TransformState) {
