@@ -13,6 +13,8 @@ import com.mc.gameengine.game.instance.PhysicsShowcaseEntity
 
 class PhysicsShowcaseScene : GameScene() {
 
+    private var counter = 0f
+
     init {
         configurePhysicsWorld {
             it.copy(
@@ -125,6 +127,12 @@ class PhysicsShowcaseScene : GameScene() {
                 behavior = PhysicsShowcaseEntity.Behavior.StaticAnchor
             )
         )
+    }
+
+    override fun fixedUpdate(dt: Float) {
+        counter += dt
+        if (counter < 4f) return
+        super.fixedUpdate(dt)
     }
 
     override fun render(renderer: Renderer, alpha: Float) {

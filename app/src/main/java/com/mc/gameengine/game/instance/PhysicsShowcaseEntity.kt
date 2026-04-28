@@ -132,9 +132,9 @@ class PhysicsShowcaseEntity(
     }
 
     override fun Renderer.onRender(state: TransformState) {
-        drawCircle(
-            radius = radius,
-            state = state.copy(pivot = Pivot.Center),
+        drawOval(
+            size = Vec2.from(radius * 2),
+            state = current,
             color = color
         )
 
@@ -142,7 +142,7 @@ class PhysicsShowcaseEntity(
         val debugText = "$label\nmode=${stats.config.mode}\nv=${stats.velocity.x.toInt()},${stats.velocity.y.toInt()}"
         drawText(
             text = debugText,
-            position = state.position + Vec2(-90f, radius + 12f),
+            position = current.position,
             style = TextStyle(
                 color = Color(0xFF222222),
                 fontSize = TextUnit(11f, TextUnitType.Sp)
