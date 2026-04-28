@@ -11,6 +11,7 @@ import com.mc.gameengine.engine.math.minus
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.input.sensor.SensorListener
+import com.mc.gameengine.engine.physics.PhysicsSimulationMode
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
@@ -22,13 +23,26 @@ class MovingSphere : Instance(), SensorListener {
 
     override fun onEnterScene() {
         current = current.copy(viewportSize() / 2f)
+        configurePhysicsConfig {
+            it.copy(
+                mode = PhysicsSimulationMode.Dynamic,
+                gravityScale = 0f,
+                linearDamping = 0f
+            )
+        }
     }
 
     override fun fixedUpdate(dt: Float) {
+        computePosition(dt)
+
         val minMoving = Vec2.Zero + 50f
         val maxMoving = viewportSize() - 50f
-        val moving = (current.position + physics.velocity * dt)
-        current = current.copy(moving.clamp(minMoving, maxMoving))
+        val clamped = current.position.clamp(minMoving, maxMoving)
+
+        if (clamped != current.position) {
+            stopPhysicsMotion()
+            current = current.copy(position = clamped)
+        }
     }
 
     override fun onSensorEvent(event: SensorEvent) {
@@ -39,7 +53,7 @@ class MovingSphere : Instance(), SensorListener {
                         "\nroll: ${event.value.y}" +
                         "\nyaw: ${event.value.z}" +
                         "\nsize: ${viewportSize()}"
-                physics = physics.copy(Vec2(event.value.y, event.value.x) * speed)
+                updateVelocity { Vec2(event.value.y, event.value.x) * speed }
             }
 
             else -> Unit

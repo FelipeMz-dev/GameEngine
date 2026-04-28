@@ -2,6 +2,8 @@ package com.mc.gameengine.game.instance.collisions
 
 import com.mc.gameengine.engine.collision.BoxCollider
 import com.mc.gameengine.engine.collision.Collider
+import com.mc.gameengine.engine.collision.CollisionBodyType
+import com.mc.gameengine.engine.collision.CollisionLayers
 import com.mc.gameengine.engine.collision.EllipseCollider
 import com.mc.gameengine.engine.compose.RenderDepth
 import com.mc.gameengine.engine.core.Instance
@@ -31,6 +33,10 @@ class Obstacle : Instance() {
     override fun onEnterScene() {
         collider.update { it.copy(pivot = Pivot.Center) }
         collider2.update { it.copy(pivot = Pivot.Top) }
+        collider.setBodyType(CollisionBodyType.Static)
+        collider2.setBodyType(CollisionBodyType.Static)
+        collider.setCollisionFilter(layer = CollisionLayers.World, mask = CollisionLayers.Player)
+        collider2.setCollisionFilter(layer = CollisionLayers.World, mask = CollisionLayers.Player)
         addCollider(collider)
         addCollider(collider2)
     }

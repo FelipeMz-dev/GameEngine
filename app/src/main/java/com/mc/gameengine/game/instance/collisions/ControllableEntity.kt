@@ -5,6 +5,9 @@ import androidx.compose.ui.input.key.Key
 import com.mc.gameengine.engine.collision.BoxCollider
 import com.mc.gameengine.engine.collision.Collider
 import com.mc.gameengine.engine.collision.CollisionEvent
+import com.mc.gameengine.engine.collision.CollisionBodyType
+import com.mc.gameengine.engine.collision.CollisionLayers
+import com.mc.gameengine.engine.collision.CollisionPhase
 import com.mc.gameengine.engine.collision.CollisionListener
 import com.mc.gameengine.engine.collision.EllipseCollider
 import com.mc.gameengine.engine.collision.PolygonalCollider
@@ -42,6 +45,8 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
     override fun onEnterScene() {
         updatePosition { Vec2.from(350f) }
         collider.update { it.copy(pivot = Pivot.Custom(20f, 70f)) }
+        collider.setBodyType(CollisionBodyType.Dynamic)
+        collider.setCollisionFilter(layer = CollisionLayers.Player, mask = CollisionLayers.World)
         addCollider(collider)
     }
 
@@ -78,8 +83,18 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
     }
 
     override fun onCollision(event: CollisionEvent) {
-        (event.other.owner as Obstacle).collisionText = event.other.toString()
-        collisioned = event.other
+        val obstacle = event.other.owner as? Obstacle ?: return
+        when (event.phase) {
+            CollisionPhase.Enter, CollisionPhase.Stay -> {
+                obstacle.collisionText = "colliding with ${event.other::class.simpleName}"
+                collisioned = event.other
+            }
+
+            CollisionPhase.Exit -> {
+                obstacle.collisionText = "not collisioned"
+                collisioned = null
+            }
+        }
     }
 
     override fun onKeyEvent(event: KeyboardEvent) {
