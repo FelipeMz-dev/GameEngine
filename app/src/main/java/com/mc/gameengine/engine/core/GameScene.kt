@@ -12,6 +12,7 @@ import com.mc.gameengine.engine.compose.RenderDepth
 import com.mc.gameengine.engine.compose.Rotation
 import com.mc.gameengine.engine.compose.Zoom
 import com.mc.gameengine.engine.input.GameInput
+import com.mc.gameengine.engine.physics.PhysicsWorld
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.div
 import com.mc.gameengine.engine.math.minus
@@ -40,6 +41,8 @@ abstract class GameScene() : WorldContext {
     private lateinit var audioManager: AudioManager
     private lateinit var gameInput: GameInput
 
+    private var physicsWorld = PhysicsWorld()
+
     override val audioPlayer: AudioPlayer
         get() = audioManager
 
@@ -51,6 +54,8 @@ abstract class GameScene() : WorldContext {
     override fun viewportSize() = viewportSize
 
     override fun viewportScale() = viewportScale
+
+    override fun physicsWorld() = physicsWorld
 
     override fun addInstance(instance: Instance) {
         entities.enqueueAdd(instance)
@@ -123,6 +128,10 @@ abstract class GameScene() : WorldContext {
 
     fun updateViewportScale(scale: ScaleFactor) {
         viewportScale = Vec2(scale.scaleX, scale.scaleY)
+    }
+
+    protected fun configurePhysicsWorld(block: (PhysicsWorld) -> PhysicsWorld) {
+        physicsWorld = block(physicsWorld)
     }
 
     override fun calculateFromViewport(position: Vec2): Vec2 {

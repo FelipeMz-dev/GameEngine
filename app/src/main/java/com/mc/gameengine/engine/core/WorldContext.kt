@@ -3,6 +3,7 @@ package com.mc.gameengine.engine.core
 import com.mc.gameengine.engine.collision.Collider
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.audio.AudioPlayer
+import com.mc.gameengine.engine.physics.PhysicsWorld
 
 internal interface WorldContext {
     val audioPlayer: AudioPlayer
@@ -20,4 +21,5 @@ internal interface WorldContext {
     fun calculateFromViewport(position: Vec2): Vec2
     fun screenToWorld(position: Vec2): Vec2
     fun worldToScreen(position: Vec2): Vec2
+    fun physicsWorld(): PhysicsWorld
 }
