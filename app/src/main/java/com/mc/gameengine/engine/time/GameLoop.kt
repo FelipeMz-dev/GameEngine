@@ -1,6 +1,5 @@
 package com.mc.gameengine.engine.time
 
-import com.mc.gameengine.core.time.GameTime
 import com.mc.gameengine.core.time.TimeConfig
 import com.mc.gameengine.engine.core.GameScene
 

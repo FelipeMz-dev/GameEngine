@@ -8,7 +8,8 @@ import kotlin.math.max
 
 data class PhysicsIntegrationResult(
     val nextState: PhysicsState,
-    val displacement: Vec2
+    val displacement: Vec2,
+    val angularDisplacement: Float
 )
 
 object PhysicsIntegrator {
@@ -23,12 +24,16 @@ object PhysicsIntegrator {
             return PhysicsIntegrationResult(
                 nextState = state.copy(
                     acceleration = Vec2.Zero,
-                    accumulatedForce = Vec2.Zero
+                    accumulatedForce = Vec2.Zero,
+                    angularAcceleration = 0f,
+                    accumulatedTorque = 0f
                 ),
-                displacement = Vec2.Zero
+                displacement = Vec2.Zero,
+                angularDisplacement = 0f
             )
         }
 
+        // --- Integración Lineal ---
         val gravity = gravityOverride ?: world.gravity
         val gravityForce = gravity * state.config.gravityScale * state.config.mass
         val totalForce = state.accumulatedForce + gravityForce
@@ -43,14 +48,31 @@ object PhysicsIntegrator {
         val clampedVelocity = nextVelocity.clamp(speedCap)
         val displacement = clampedVelocity * dt
 
+        // --- Integración Angular ---
+        val torqueAcceleration = state.accumulatedTorque * state.inverseMomentOfInertia
+        val angularAcceleration = torqueAcceleration + state.externalAngularAcceleration
+        
+        val angularDampingFactor = max(0f, 1f - state.config.angularDamping * dt)
+        var nextAngularVelocity = (state.angularVelocity + angularAcceleration * dt) * angularDampingFactor
+        
+        val angularSpeedCap = state.config.maxAngularSpeed
+        nextAngularVelocity = nextAngularVelocity.coerceIn(-angularSpeedCap, angularSpeedCap)
+        val angularDisplacement = nextAngularVelocity * dt
+
         return PhysicsIntegrationResult(
             nextState = state.copy(
                 velocity = clampedVelocity,
                 acceleration = acceleration,
                 accumulatedForce = Vec2.Zero,
-                externalAcceleration = Vec2.Zero
+                externalAcceleration = Vec2.Zero,
+                
+                angularVelocity = nextAngularVelocity,
+                angularAcceleration = angularAcceleration,
+                accumulatedTorque = 0f,
+                externalAngularAcceleration = 0f
             ),
-            displacement = displacement
+            displacement = displacement,
+            angularDisplacement = angularDisplacement
         )
     }
 }

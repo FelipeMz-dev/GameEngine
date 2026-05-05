@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,7 +35,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.mc.gameengine.core.time.GameTime
+import com.mc.gameengine.engine.time.GameTime
 import com.mc.gameengine.core.time.TimeConfig
 import com.mc.gameengine.engine.assets.AtlasSpriteDef
 import com.mc.gameengine.engine.assets.FrameListSpriteDef

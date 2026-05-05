@@ -57,7 +57,7 @@ internal class CollisionVerticesDelegateImpl internal constructor(): CollisionVe
     }
 
     private fun MaskCollider.updateVertices() {
-        val scaledSize = size * state.scale
+        val scaledSize = getSize() * state.scale
         val pivotOffset = state.pivot.resolve(scaledSize)
 
         val topLeft = Vec2(0f, 0f)

@@ -8,6 +8,5 @@ import com.mc.gameengine.engine.input.GameInput
 class SceneDependencies(
     val spriteManager: SpriteManager,
     val audioManager: AudioManager,
-    val gameInput: GameInput,
-    val camera2D: Camera2D
+    val gameInput: GameInput
 )

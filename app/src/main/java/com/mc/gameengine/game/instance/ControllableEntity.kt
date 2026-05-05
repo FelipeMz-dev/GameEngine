@@ -1,14 +1,14 @@
-package com.mc.gameengine.game.instance.collisions
+package com.mc.gameengine.game.instance
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import com.mc.gameengine.engine.collision.BoxCollider
 import com.mc.gameengine.engine.collision.Collider
-import com.mc.gameengine.engine.collision.CollisionEvent
 import com.mc.gameengine.engine.collision.CollisionBodyType
+import com.mc.gameengine.engine.collision.CollisionEvent
 import com.mc.gameengine.engine.collision.CollisionLayers
-import com.mc.gameengine.engine.collision.CollisionPhase
 import com.mc.gameengine.engine.collision.CollisionListener
+import com.mc.gameengine.engine.collision.CollisionPhase
 import com.mc.gameengine.engine.collision.EllipseCollider
 import com.mc.gameengine.engine.collision.PolygonalCollider
 import com.mc.gameengine.engine.core.Instance
@@ -20,6 +20,7 @@ import com.mc.gameengine.engine.math.minus
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
+import com.mc.gameengine.game.instance.Obstacle
 
 class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
 
@@ -40,10 +41,10 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
         )
     )
 
-    private var centerCollider = Vec2.Zero
+    private var centerCollider = Vec2.Companion.Zero
 
     override fun onEnterScene() {
-        updatePosition { Vec2.from(350f) }
+        updatePosition { Vec2.Companion.from(350f) }
         collider.update { it.copy(pivot = Pivot.Custom(20f, 70f)) }
         collider.setBodyType(CollisionBodyType.Dynamic)
         collider.setCollisionFilter(layer = CollisionLayers.Player, mask = CollisionLayers.World)
@@ -51,13 +52,12 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
     }
 
     override fun fixedUpdate(dt: Float) {
-        computePosition(dt)
         collider.update { it.copy(position = current.position) }
         centerCollider = when (collider) {
             is BoxCollider -> collider.getCenter()
             is EllipseCollider -> collider.getCenter()
             is PolygonalCollider -> collider.getCenter()
-            else -> Vec2.Zero
+            else -> Vec2.Companion.Zero
         }
         collisioned = null
     }
@@ -68,26 +68,29 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
                 position = centerCollider,
                 pivot = Pivot.Center
             ),
-            size = Vec2.from(50f),
+            size = Vec2.Companion.from(50f),
             color = when (collisioned) {
-                is EllipseCollider -> Color.Green
-                is BoxCollider -> Color.Blue
-                else -> Color.Red
+                is EllipseCollider -> Color.Companion.Green
+                is BoxCollider -> Color.Companion.Blue
+                else -> Color.Companion.Red
             },
         )
 
         drawText(
             "position: ${collider.state.position} \n angle: ${collider.state.angle} \n scale: ${collider.state.scale}",
-            position = Vec2.from(100f)
+            position = Vec2.Companion.from(100f)
         )
     }
 
     override fun onCollision(event: CollisionEvent) {
-        val obstacle = event.other.owner as? Obstacle ?: return
+        val obstacle = when (event.other) {
+            is Collider -> event.other.owner as? Obstacle
+            else -> null // Para fixtures de JBox2D, no aplicable aquí
+        } ?: return
         when (event.phase) {
             CollisionPhase.Enter, CollisionPhase.Stay -> {
                 obstacle.collisionText = "colliding with ${event.other::class.simpleName}"
-                collisioned = event.other
+                collisioned = event.other as? Collider
             }
 
             CollisionPhase.Exit -> {
@@ -101,14 +104,14 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
         when (event) {
             is KeyboardEvent.KeyHeld -> {
                 when (event.key) {
-                    Key.A -> collider.update { it.copy(angle = it.angle + rotation * event.dt) }
-                    Key.S -> collider.update { it.copy(angle = it.angle - rotation * event.dt) }
-                    Key.Q -> collider.update { it.copy(scale = it.scale + event.dt) }
-                    Key.W -> collider.update { it.copy(scale = it.scale - event.dt) }
-                    Key.DirectionLeft -> updatePosition { it.copy(x = it.x - speed * event.dt) }
-                    Key.DirectionRight -> updatePosition { it.copy(x = it.x + speed * event.dt) }
-                    Key.DirectionUp -> updatePosition { it.copy(y = it.y - speed * event.dt) }
-                    Key.DirectionDown -> updatePosition { it.copy(y = it.y + speed * event.dt) }
+                    Key.Companion.A -> collider.update { it.copy(angle = it.angle + rotation * event.dt) }
+                    Key.Companion.S -> collider.update { it.copy(angle = it.angle - rotation * event.dt) }
+                    Key.Companion.Q -> collider.update { it.copy(scale = it.scale + event.dt) }
+                    Key.Companion.W -> collider.update { it.copy(scale = it.scale - event.dt) }
+                    Key.Companion.DirectionLeft -> updatePosition { it.copy(x = it.x - speed * event.dt) }
+                    Key.Companion.DirectionRight -> updatePosition { it.copy(x = it.x + speed * event.dt) }
+                    Key.Companion.DirectionUp -> updatePosition { it.copy(y = it.y - speed * event.dt) }
+                    Key.Companion.DirectionDown -> updatePosition { it.copy(y = it.y + speed * event.dt) }
                 }
             }
 

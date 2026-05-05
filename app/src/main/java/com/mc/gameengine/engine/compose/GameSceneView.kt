@@ -37,7 +37,6 @@ fun GameSceneView(
     gameInput: GameInput = rememberGameInput(),
     contentScale: ContentScale = ContentScale.Crop,
     virtualResolution: VirtualResolution = VirtualResolution.Undefined,
-    camera2D: Camera2D = rememberCamera2D(virtualResolution)
 ) {
     val currentView = LocalView.current
     val loop = remember { GameLoop(scene) }
@@ -56,8 +55,7 @@ fun GameSceneView(
             SceneDependencies(
                 spriteManager = spriteManager,
                 audioManager = audioManager,
-                gameInput = gameInput,
-                camera2D = camera2D
+                gameInput = gameInput
             )
         )
     }
@@ -77,7 +75,7 @@ fun GameSceneView(
                 this,
                 spriteManager,
                 textMeasurer,
-                camera2D,
+                scene.camera2D,
             )
             scene.apply { render(renderer, loop.alpha()) }
         }

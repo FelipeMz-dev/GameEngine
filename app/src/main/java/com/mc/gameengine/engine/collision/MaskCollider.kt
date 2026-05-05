@@ -26,8 +26,7 @@ class MaskCollider(
 
     private lateinit var source: SpriteSource
 
-    var size = Vec2.Zero
-        private set
+    private var internalSize = Vec2.Zero
     var bufferCache: List<Vec2>? = null
     var frame = 0
 
@@ -72,7 +71,7 @@ class MaskCollider(
     internal fun SpriteManager.loadSource() {
         if (!::source.isInitialized) {
             source = get(spriteId)
-            size = Vec2(source.frameWidth, source.frameHeight)
+            internalSize = Vec2(source.frameWidth, source.frameHeight)
             onUpdate()
             syncAABB()
         }
@@ -88,7 +87,7 @@ class MaskCollider(
                 width = spriteWidth,
                 height = spriteHeight
             )
-            bufferCache = buffer.transformBuffer(size, state)
+            bufferCache = buffer.transformBuffer(internalSize, state)
         }
         return bufferCache
     }
@@ -97,7 +96,10 @@ class MaskCollider(
 
     fun getAxes(): List<Vec2> = computeAxes()
 
-    fun getCenter() = computeCenter()
+    override fun getCenter() = computeCenter()
+
+    override fun getSize(): Vec2 = internalSize
+
 }
 
 fun IntArray.transformBuffer(size: Vec2, transform: TransformState): List<Vec2> {

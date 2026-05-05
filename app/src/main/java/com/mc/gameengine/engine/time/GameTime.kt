@@ -1,4 +1,6 @@
-package com.mc.gameengine.core.time
+package com.mc.gameengine.engine.time
+
+import com.mc.gameengine.core.time.TimeConfig
 
 internal class GameTime {
 

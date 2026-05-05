@@ -3,6 +3,7 @@ package com.mc.gameengine.engine.collision
 import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.AABB
+import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.render.Renderer
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -55,6 +56,10 @@ abstract class Collider(open val owner: Instance) {
     fun setPhysicsMaterial(material: PhysicsMaterial) {
         physicsMaterial = material
     }
+
+    abstract fun getCenter(): Vec2
+
+    abstract fun getSize(): Vec2
 
     var state: TransformState = TransformState()
         private set

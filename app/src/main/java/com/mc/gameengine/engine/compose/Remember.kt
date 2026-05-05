@@ -69,8 +69,3 @@ fun rememberSensorInputAdapter(sensorProcessor: SensorProcessor): SensorInputAda
     val sensorInputAdapter = remember { SensorInputAdapter(context, sensorProcessor) }
     return sensorInputAdapter
 }
-
-@Composable
-fun rememberCamera2D(
-    virtualResolution: VirtualResolution
-) = remember { Camera2D(viewportSize = virtualResolution.toSize().toVec2()) }

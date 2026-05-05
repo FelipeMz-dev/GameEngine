@@ -55,6 +55,8 @@ open class PolygonalCollider(
 
     fun getAxes(): List<Vec2> = computeAxes()
 
-    fun getCenter() = computeCenter()
+    override fun getCenter() = computeCenter()
+
+    override fun getSize(): Vec2 = localSize
 
 }

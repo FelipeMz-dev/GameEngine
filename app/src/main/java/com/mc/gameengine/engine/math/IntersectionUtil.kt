@@ -1,12 +1,89 @@
 package com.mc.gameengine.engine.math
 
 import com.mc.gameengine.engine.collision.BoxCollider
+import com.mc.gameengine.engine.collision.CircleCollider
 import com.mc.gameengine.engine.collision.EllipseCollider
 import com.mc.gameengine.engine.collision.MaskCollider
 import com.mc.gameengine.engine.collision.PolygonalCollider
 import kotlin.collections.plus
 
 internal object IntersectionUtil {
+
+    fun circleCircle(a: CircleCollider, b: CircleCollider): Boolean {
+        val dist = (a.getCenter() - b.getCenter()).length()
+        return dist <= a.radius + b.radius
+    }
+
+    fun circleBox(circle: CircleCollider, box: BoxCollider): Boolean {
+        val circleCenter = circle.getCenter()
+        val boxCenter = box.getCenter()
+
+        var localCircle = (circleCenter - boxCenter).rotate(-box.state.angle)
+        localCircle = Vec2(localCircle.x / box.state.scale.x, localCircle.y / box.state.scale.y)
+
+        val hw = box.width / 2f
+        val hh = box.height / 2f
+
+        val closestLocal = Vec2(
+            localCircle.x.coerceIn(-hw, hw),
+            localCircle.y.coerceIn(-hh, hh)
+        )
+
+        val closestRotated = closestLocal.rotate(box.state.angle)
+        val closestWorld = boxCenter + Vec2(
+            closestRotated.x * box.state.scale.x,
+            closestRotated.y * box.state.scale.y
+        )
+
+        return (closestWorld - circleCenter).length() <= circle.radius
+    }
+
+    fun circleOval(circle: CircleCollider, oval: EllipseCollider): Boolean {
+        val centerDiff = oval.getCenter() - circle.getCenter()
+        val local = centerDiff.rotate(-oval.state.angle)
+
+        val rx = oval.radius.x * oval.state.scale.x
+        val ry = oval.radius.y * oval.state.scale.y
+
+        return (local.x * local.x) / (rx * rx) + (local.y * local.y) / (ry * ry) <= 1f
+    }
+
+    fun circlePolygon(circle: CircleCollider, polygon: PolygonalCollider): Boolean {
+        val circleCenter = circle.getCenter()
+
+        val transformed = polygon.getVertices().map { v ->
+            val p = (v - circleCenter).rotate(-polygon.state.angle)
+            Vec2(
+                x = p.x / (polygon.state.scale.x * circle.radius),
+                y = p.y / (polygon.state.scale.y * circle.radius)
+            )
+        }
+        if (pointInPolygon(Vec2.Zero, transformed)) return true
+
+        var minDistSq = Float.MAX_VALUE
+        for (i in transformed.indices) {
+            val a = transformed[i]
+            val b = transformed[(i + 1) % transformed.size]
+            val ab = b - a
+            val abLenSq = ab.x * ab.x + ab.y * ab.y
+            val t = if (abLenSq == 0f) 0f else ((-a.dot(ab)) / abLenSq).coerceIn(0f, 1f)
+            val closest = Vec2(a.x + ab.x * t, a.y + ab.y * t)
+            val distSq = closest.x * closest.x + closest.y * closest.y
+            if (distSq < minDistSq) minDistSq = distSq
+        }
+
+        return minDistSq <= 1f
+    }
+
+    fun circleMask(circle: CircleCollider, mask: MaskCollider): Boolean {
+        val buffer = mask.getBuffer() ?: return false
+        val circleCenter = circle.getCenter()
+
+        buffer.forEach {
+            if (it.distanceSquaredTo(circleCenter) <= circle.radius * circle.radius) return true
+        }
+        return false
+    }
 
     fun ovalOval(a: EllipseCollider, b: EllipseCollider): Boolean {
         val centerDiff = b.getCenter() - a.getCenter()

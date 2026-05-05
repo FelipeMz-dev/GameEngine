@@ -16,4 +16,5 @@ fun CollisionsScreen(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize(),
         scene = scene,
     )
+
 }

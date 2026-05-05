@@ -22,6 +22,7 @@ internal class CollisionCenterDelegateImpl : CollisionCenterDelegate {
             is EllipseCollider -> updateCenter()
             is BoxCollider -> updateCenter()
             is PolygonalCollider -> updateCenter()
+            is CircleCollider -> updateCenter()
         }
         return cachedCenter ?: state.position
     }
@@ -35,6 +36,13 @@ internal class CollisionCenterDelegateImpl : CollisionCenterDelegate {
         val localCenter = Vec2(size.x / 2f, size.y / 2f)
         val pivotOffset = state.pivot.resolve(size)
         cachedCenter = (localCenter - pivotOffset).rotate(state.angle) + state.position
+    }
+
+    private fun CircleCollider.updateCenter() {
+        val size = state.scale * (radius * 2f)
+        val localCenter = Vec2(size.x / 2f, size.y / 2f)
+        val pivotOffset = state.pivot.resolve(size)
+        cachedCenter = (localCenter - pivotOffset) + state.position
     }
 
     private fun BoxCollider.updateCenter() {

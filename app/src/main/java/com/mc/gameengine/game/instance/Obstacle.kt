@@ -1,4 +1,4 @@
-package com.mc.gameengine.game.instance.collisions
+package com.mc.gameengine.game.instance
 
 import com.mc.gameengine.engine.collision.BoxCollider
 import com.mc.gameengine.engine.collision.Collider

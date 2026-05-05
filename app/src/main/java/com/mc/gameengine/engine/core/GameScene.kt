@@ -3,16 +3,12 @@ package com.mc.gameengine.engine.core
 import androidx.compose.ui.layout.ScaleFactor
 import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.audio.AudioManager
-import com.mc.gameengine.engine.audio.AudioPlayer
 import com.mc.gameengine.engine.collision.Collider
 import com.mc.gameengine.engine.collision.CollisionSystem
 import com.mc.gameengine.engine.collision.MaskCollider
 import com.mc.gameengine.engine.compose.Camera2D
 import com.mc.gameengine.engine.compose.RenderDepth
-import com.mc.gameengine.engine.compose.Rotation
-import com.mc.gameengine.engine.compose.Zoom
 import com.mc.gameengine.engine.input.GameInput
-import com.mc.gameengine.engine.physics.PhysicsWorld
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.div
 import com.mc.gameengine.engine.math.minus
@@ -20,6 +16,7 @@ import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.rotate
 import com.mc.gameengine.engine.math.rotateAround
 import com.mc.gameengine.engine.math.times
+import com.mc.gameengine.engine.physics.PhysicsManager
 import com.mc.gameengine.engine.render.Renderer
 import com.mc.gameengine.engine.render.VirtualResolution
 
@@ -36,26 +33,23 @@ abstract class GameScene() : WorldContext {
         }
     }
 
-    protected var camera: Camera2D? = null
     private lateinit var spriteManager: SpriteManager
     private lateinit var audioManager: AudioManager
     private lateinit var gameInput: GameInput
 
-    private var physicsWorld = PhysicsWorld()
-
-    override val audioPlayer: AudioPlayer
-        get() = audioManager
+    internal var camera2D: Camera2D = Camera2D()
+    private var physicsManager = PhysicsManager()
 
     private var viewportSize = Vec2.Zero
     private var viewportScale = Vec2.Zero
 
-    override fun spriteSize(id: SpriteId) = spriteManager.getSize(id)
-
     override fun viewportSize() = viewportSize
-
     override fun viewportScale() = viewportScale
+    override fun physicsWorld() = physicsManager
+    override fun audioPlayer() = audioManager
+    override fun camera2D() = camera2D
 
-    override fun physicsWorld() = physicsWorld
+    override fun spriteSize(id: SpriteId) = spriteManager.getSize(id)
 
     override fun addInstance(instance: Instance) {
         entities.enqueueAdd(instance)
@@ -63,10 +57,6 @@ abstract class GameScene() : WorldContext {
 
     override fun deleteInstance(instance: Instance) {
         entities.enqueueRemove(instance)
-    }
-
-    protected fun deleteAllInstances(block: (Instance) -> Boolean) {
-        entities.enqueueRemoveWhere(block)
     }
 
     override fun addCollider(collider: Collider) {
@@ -90,7 +80,6 @@ abstract class GameScene() : WorldContext {
         attachSpriteManager(dependencies.spriteManager)
         attachAudioManager(dependencies.audioManager)
         attachInput(dependencies.gameInput)
-        attachCamera2D(dependencies.camera2D)
     }
 
     fun attachSpriteManager(spriteManager: SpriteManager) {
@@ -118,20 +107,13 @@ abstract class GameScene() : WorldContext {
         }
     }
 
-    fun attachCamera2D(camera: Camera2D) {
-        this.camera = camera
-    }
-
     fun updateViewportSize(resolution: VirtualResolution) {
         viewportSize = Vec2(resolution.width, resolution.height)
+        camera2D.viewportSize = viewportSize
     }
 
     fun updateViewportScale(scale: ScaleFactor) {
         viewportScale = Vec2(scale.scaleX, scale.scaleY)
-    }
-
-    protected fun configurePhysicsWorld(block: (PhysicsWorld) -> PhysicsWorld) {
-        physicsWorld = block(physicsWorld)
     }
 
     override fun calculateFromViewport(position: Vec2): Vec2 {
@@ -139,45 +121,29 @@ abstract class GameScene() : WorldContext {
     }
 
     override fun screenToWorld(position: Vec2): Vec2 {
-        val cam = camera ?: return position
-        val scaled = (position - cam.zoom.from) / cam.zoom.value + cam.zoom.from
-        val rotated = (scaled - cam.rotation.from)
-            .rotate(-cam.rotation.angle) + cam.rotation.from
-        return rotated - cam.position
+        val scaled = (position - camera2D.zoom.from) / camera2D.zoom.value + camera2D.zoom.from
+        val rotated = (scaled - camera2D.rotation.from)
+            .rotate(-camera2D.rotation.angle) + camera2D.rotation.from
+        return rotated - camera2D.position
     }
 
     override fun worldToScreen(position: Vec2): Vec2 {
-        val cam = camera ?: return position
-        val rotated = (position + cam.position)
-            .rotateAround(cam.rotation.from, cam.rotation.angle)
-        val scaled = (rotated - cam.zoom.from) * cam.zoom.value + cam.zoom.from
+        val rotated = (position + camera2D.position)
+            .rotateAround(camera2D.rotation.from, camera2D.rotation.angle)
+        val scaled = (rotated - camera2D.zoom.from) * camera2D.zoom.value + camera2D.zoom.from
         return scaled
-    }
-
-    override fun rotateCamera(angle: Float, from: Vec2) {
-        camera?.apply { rotation = Rotation(angle, from) }
-    }
-
-    override fun translateCamera(to: Vec2) {
-        camera?.apply { position = to }
-    }
-
-    override fun zoomCamera(value: Float, from: Vec2) {
-        camera?.apply { zoom = Zoom(value, from) }
     }
 
     open fun update(dt: Float) {
         syncInstances()
-        entities.forEach { it.update(dt) }
+        entities.forEach { it.onUpdate(dt) }
     }
 
     open fun fixedUpdate(dt: Float) {
         syncInstances()
-        entities.forEach {
-            it.snapshot()
-            it.fixedUpdate(dt)
-        }
+        entities.forEach { it.onFixedUpdate(dt) }
         fixedStepDispatcher.dispatch(dt)
+        physicsManager.step(dt)
     }
 
     open fun render(

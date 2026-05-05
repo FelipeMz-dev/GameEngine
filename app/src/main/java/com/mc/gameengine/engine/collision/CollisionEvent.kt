@@ -7,7 +7,7 @@ enum class CollisionPhase {
 }
 
 data class CollisionEvent(
-    val self: Collider,
-    val other: Collider,
+    val self: Any, // Puede ser Collider o Fixture
+    val other: Any, // Puede ser Collider o Fixture
     val phase: CollisionPhase
 )

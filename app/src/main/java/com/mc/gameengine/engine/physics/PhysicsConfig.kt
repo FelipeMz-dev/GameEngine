@@ -8,8 +8,11 @@ enum class PhysicsSimulationMode {
 
 data class PhysicsConfig(
     val mass: Float = 1f,
+    val momentOfInertia: Float = 1f,
     val linearDamping: Float = 0f,
+    val angularDamping: Float = 0f,
     val gravityScale: Float = 1f,
     val maxSpeed: Float = Float.POSITIVE_INFINITY,
+    val maxAngularSpeed: Float = Float.POSITIVE_INFINITY,
     val mode: PhysicsSimulationMode = PhysicsSimulationMode.Dynamic
 )

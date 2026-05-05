@@ -185,23 +185,13 @@ class RendererImpl(
         color: Color
     ) {
         val size = Vec2(radius, radius) * 2f
-        val pivotOffset = state.pivot.resolve(size)
-        val topLeft = (state.position - pivotOffset)
-        commands += RenderCommand(deep) {
-            withTransform(
-                {
-                    scale(state.scale.x, state.scale.y, pivotOffset.toOffset())
-                    rotate(state.angle, state.position.toOffset())
-                    translate(topLeft.x, topLeft.y)
-                }
-            ) {
-                drawCircle(
-                    color = color,
-                    radius = radius,
-                    style = style
-                )
-            }
-        }
+        drawOval(
+            size = size,
+            state = state,
+            style = style,
+            deep = deep,
+            color = color
+        )
     }
 
     override fun drawOval(

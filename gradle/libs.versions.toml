@@ -8,6 +8,8 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.0"
 composeBom = "2024.09.00"
+jbox2dVersion = "2.2.1.1"
+dyn4jVersion = "5.0.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -24,6 +26,8 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+jbox2d = { group = "org.jbox2d", name = "jbox2d-library", version.ref = "jbox2dVersion" }
+dyn4j = { group = "org.dyn4j", name = "dyn4j", version.ref = "dyn4jVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

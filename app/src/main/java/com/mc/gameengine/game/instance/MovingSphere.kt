@@ -22,48 +22,34 @@ class MovingSphere : Instance(), SensorListener {
     private val speed = 500f
 
     override fun onEnterScene() {
-        current = current.copy(viewportSize() / 2f)
-        configurePhysicsConfig {
-            it.copy(
-                mode = PhysicsSimulationMode.Dynamic,
-                gravityScale = 0f,
-                linearDamping = 0f
-            )
-        }
+        updatePosition { viewportSize() / 2f }
     }
 
     override fun fixedUpdate(dt: Float) {
-        computePosition(dt)
 
         val minMoving = Vec2.Zero + 50f
         val maxMoving = viewportSize() - 50f
         val clamped = current.position.clamp(minMoving, maxMoving)
 
         if (clamped != current.position) {
-            stopPhysicsMotion()
-            current = current.copy(position = clamped)
+            updatePosition { clamped }
         }
     }
 
     override fun onSensorEvent(event: SensorEvent) {
         when (event) {
-            is SensorEvent.AccelerometerEvent -> {
-                sensorState = "State: " +
-                        "\npitch: ${event.value.x}" +
-                        "\nroll: ${event.value.y}" +
-                        "\nyaw: ${event.value.z}" +
-                        "\nsize: ${viewportSize()}"
-                updateVelocity { Vec2(event.value.y, event.value.x) * speed }
-            }
-
+            is SensorEvent.AccelerometerEvent -> moveByAccelerometer(event)
             else -> Unit
         }
     }
 
-    override fun update(dt: Float) {
-        if (current.position == Vec2.Zero && viewportSize() != Vec2.Zero) {
-            current.position = viewportSize() / 2f
-        }
+    fun moveByAccelerometer(event: SensorEvent.AccelerometerEvent) {
+        sensorState = "State: " +
+                "\npitch: ${event.value.x}" +
+                "\nroll: ${event.value.y}" +
+                "\nyaw: ${event.value.z}" +
+                "\nsize: ${viewportSize()}"
+        updatePosition { it + (Vec2(event.value.y, event.value.x) * speed) }
     }
 
     override fun Renderer.onRender(state: TransformState) {
