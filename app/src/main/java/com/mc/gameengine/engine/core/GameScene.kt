@@ -18,7 +18,9 @@ import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.physics.PhysicsManager
 import com.mc.gameengine.engine.render.Renderer
 
-abstract class GameScene() : WorldContext {
+abstract class GameScene(
+    private val physicsManager: PhysicsManager = PhysicsManager(),
+) : WorldContext {
 
     private val entities = SceneEntityManager()
     private val collisionSystem = CollisionSystem()
@@ -36,8 +38,6 @@ abstract class GameScene() : WorldContext {
     private lateinit var gameInput: GameInput
 
     internal var camera2D: Camera2D = Camera2D()
-    private var physicsManager = PhysicsManager()
-
     private lateinit var viewport: Viewport
 
     override fun viewport() = viewport

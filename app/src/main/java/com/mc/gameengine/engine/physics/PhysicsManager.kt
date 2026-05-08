@@ -28,29 +28,53 @@ class PhysicsManager(
 
     internal fun createRigidBody(
         owner: Instance,
+        config: RigidBodyConfig,
+    ): RigidBody {
+        val body = createBody(owner, config)
+        return RigidBody(body = body, manager = this)
+    }
+
+    internal fun createRigidBody(
+        owner: Instance,
         shape: Shape,
-        state: TransformState,
+        state: TransformState = TransformState(),
         type: CollisionBodyType = CollisionBodyType.Dynamic,
-        material: PhysicsMaterial? = null
+        material: PhysicsMaterial = PhysicsMaterial(),
+        physicState: PhysicState = PhysicState(),
+    ): RigidBody {
+        return createRigidBody(
+            owner = owner,
+            config = RigidBodyConfig(
+                shape = shape,
+                state = state,
+                type = type,
+                material = material,
+                physicState = physicState,
+            )
+        )
+    }
+
+    private fun createBody(
+        owner: Instance,
+        config: RigidBodyConfig,
     ): Body {
         val body = Body()
-        val angleRadians = factor.degToRad(state.angle)
-        val positionMeters = factor.toDyn4j(state.position)
-        val massType = factor.toDyn4j(type)
-        val scaledShape = scaleShape(shape, state.scale)
+        val angleRadians = factor.degToRad(config.state.angle)
+        val positionMeters = factor.toDyn4j(config.state.position)
+        val massType = factor.toDyn4j(config.type)
+        val scaledShape = scaleShape(config.shape, config.state.scale)
         val jShape = factor.toDyn4j(scaledShape)
         val fixture = body.addFixture(jShape)
 
-        material?.apply {
-            fixture.density = material.density.toDouble()
-            fixture.friction = material.friction.toDouble()
-            fixture.restitution = material.restitution.toDouble()
-        }
+        fixture.density = config.material.density.toDouble()
+        fixture.friction = config.material.friction.toDouble()
+        fixture.restitution = config.material.restitution.toDouble()
 
         body.userData = owner
         body.setMass(massType)
         body.rotate(angleRadians)
         body.translate(positionMeters)
+        updateBodyPhysicState(body, config.physicState)
 
         world.addBody(body)
         return body

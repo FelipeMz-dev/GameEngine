@@ -11,7 +11,6 @@ import com.mc.gameengine.engine.input.touch.TouchListener
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.length
 import com.mc.gameengine.engine.math.minus
-import com.mc.gameengine.engine.physics.RigidBody
 import com.mc.gameengine.engine.physics.Shape
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
@@ -30,7 +29,7 @@ class BallLauncher(
     )
 
     override fun onEnterScene() {
-        RigidBody.create(
+        createRigidBody(
             shape = Shape.BoxShape(Vec2(viewport().size.x, 10f)),
             state = TransformState(position = Vec2(viewport().size.x / 2f, floorY)),
             type = CollisionBodyType.Static

@@ -21,7 +21,7 @@ class ProjectileBall(
     private lateinit var ball: RigidBody
 
     override fun onEnterScene() {
-        ball = RigidBody.create(
+        ball = createRigidBody(
             shape = Shape.CircleShape(spec.radius),
             state = TransformState(position = start),
             type = CollisionBodyType.Dynamic,
