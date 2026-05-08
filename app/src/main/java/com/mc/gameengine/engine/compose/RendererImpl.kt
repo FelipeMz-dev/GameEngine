@@ -44,7 +44,7 @@ class RendererImpl(
     override fun flush() {
         val cameraScale = camera.zoom.value
         val cameraScaleFrom = camera.zoom.from.toOffset()
-        val cameraRotationFrom = camera.rotation.from.toOffset()
+        val cameraRotationFrom = camera.rotation.point.toOffset()
 
         commands.sortBy { it.order }
         with(drawScope) {

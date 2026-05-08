@@ -2,6 +2,7 @@ package com.mc.gameengine.game.scene
 
 import androidx.compose.ui.graphics.Color
 import com.mc.gameengine.engine.core.GameScene
+import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
@@ -72,9 +73,9 @@ class CollisionScene : GameScene() {
 
     override fun render(renderer: Renderer, alpha: Float) {
         renderer.drawRect(
-            size = Vec2(viewportSize().x, 10f),
-            state = com.mc.gameengine.engine.core.TransformState(
-                position = Vec2(viewportSize().x / 2f, floorY),
+            size = Vec2(viewport().size.x, 10f),
+            state = TransformState(
+                position = Vec2(viewport().size.x / 2f, floorY),
                 pivot = Pivot.Center
             ),
             color = Color(0xFF455A64)

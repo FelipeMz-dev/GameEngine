@@ -6,8 +6,8 @@ import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
+import com.mc.gameengine.engine.physics.RigidBody
 import com.mc.gameengine.engine.physics.Shape
-import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
 class StackBlock(
@@ -17,13 +17,12 @@ class StackBlock(
     private val color: Color,
 ) : Instance() {
 
+    private lateinit var block: RigidBody
+
     override fun onEnterScene() {
-        current = current.copy(position = start, pivot = Pivot.Center)
-        // Crear cuerpo JBox2D dinámico
-        val shape = Shape.BoxShape(size)
-        createRigidBody(
-            shape = shape,
-            state = current,
+        block = RigidBody.create(
+            shape = Shape.BoxShape(size),
+            state = TransformState(position = start),
             type = CollisionBodyType.Dynamic,
             material = PhysicsMaterial(
                 density = density,
@@ -34,14 +33,16 @@ class StackBlock(
     }
 
     override fun fixedUpdate(dt: Float) {
-        if  (isOutOfScreen()) {
+        if (!::block.isInitialized) return
+        current = block.transformState
+        if (isOutOfScreen()) {
             deleteInstance(this)
         }
     }
 
     private fun isOutOfScreen(): Boolean {
         val margin = 180f
-        val view = viewportSize()
+        val view = viewport().size
         return current.position.x < -margin ||
                 current.position.x > view.x + margin ||
                 current.position.y < -margin ||
@@ -49,9 +50,10 @@ class StackBlock(
     }
 
     override fun Renderer.onRender(state: TransformState) {
+        if (!::block.isInitialized) return
         drawRect(
             size = size,
-            state = state,
+            state = current,
             color = color
         )
     }

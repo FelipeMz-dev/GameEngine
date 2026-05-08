@@ -3,18 +3,18 @@ package com.mc.gameengine.engine.compose
 import com.mc.gameengine.engine.math.Vec2
 
 data class Camera2D(
-    var position: Vec2 = Vec2.Companion.Zero,
+    var position: Vec2 = Vec2.Zero,
     var zoom: Zoom = Zoom(1f),
-    var rotation: Rotation = Rotation(0f),
-    var viewportSize: Vec2 = Vec2.Companion.Zero
+    var rotation: CameraRotation = CameraRotation(0f),
+    var viewportSize: Vec2 = Vec2.Zero
 )
 
 data class Zoom(
     val value: Float,
-    val from: Vec2 = Vec2.Companion.Zero
+    val from: Vec2 = Vec2.Zero
 )
 
-data class Rotation(
+data class CameraRotation(
     val angle: Float,
-    val from: Vec2 = Vec2.Companion.Zero
+    val point: Vec2 = Vec2.Zero
 )

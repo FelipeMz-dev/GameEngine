@@ -8,10 +8,9 @@ import com.mc.gameengine.engine.physics.PhysicsManager
 
 internal interface WorldContext {
     fun audioPlayer(): AudioPlayer
-    fun physicsWorld(): PhysicsManager
+    fun physicsManager(): PhysicsManager
     fun camera2D(): Camera2D?
-    fun viewportSize(): Vec2
-    fun viewportScale(): Vec2
+    fun viewport(): Viewport
     fun spriteSize(id: SpriteId): Vec2
     fun deleteInstance(instance: Instance)
     fun addInstance(instance: Instance)
@@ -21,4 +20,12 @@ internal interface WorldContext {
     fun calculateFromViewport(position: Vec2): Vec2
     fun screenToWorld(position: Vec2): Vec2
     fun worldToScreen(position: Vec2): Vec2
+}
+
+internal inline fun <reified T : Instance> WorldContext.spawn(factory: () -> T): T {
+    return InstanceContextProvider.runWithContext(this) {
+        val instance = factory()
+        addInstance(instance)
+        instance
+    }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.ScaleFactor
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.toSize
 import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.core.GameScene
@@ -27,6 +28,8 @@ import com.mc.gameengine.engine.input.GameInput
 import com.mc.gameengine.engine.render.VirtualResolution
 import com.mc.gameengine.engine.time.GameLoop
 import com.mc.gameengine.engine.audio.AudioManager
+import com.mc.gameengine.engine.core.Viewport
+import com.mc.gameengine.engine.math.Vec2
 
 @Composable
 fun GameSceneView(
@@ -81,19 +84,24 @@ fun GameSceneView(
         }
     }
 
+    fun updateScreenSize(size: IntSize) {
+        if (virtualResolution is VirtualResolution.Undefined) {
+            resolution = VirtualResolution.Custom(size.toSize())
+        }
+        scale = contentScale.computeScaleFactor(
+            resolution.toSize(),
+            size.toSize()
+        )
+        val viewport = Viewport(
+            size = Vec2(resolution.width, resolution.height),
+            scale = Vec2(scale.scaleX, scale.scaleY)
+        )
+        scene.updateViewport(viewport)
+    }
+
     Canvas(
         modifier = modifier
-            .onSizeChanged {
-                if (virtualResolution is VirtualResolution.Undefined) {
-                    resolution = VirtualResolution.Custom(it.toSize())
-                }
-                scale = contentScale.computeScaleFactor(
-                    resolution.toSize(),
-                    it.toSize()
-                )
-                scene.updateViewportScale(scale)
-                scene.updateViewportSize(resolution)
-            }
+            .onSizeChanged { updateScreenSize(it) }
             .run {
                 val touch = gameInput.touchProcessor
                 touch?.let { gameTouchInput(touch) } ?: this

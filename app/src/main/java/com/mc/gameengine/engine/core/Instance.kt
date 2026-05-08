@@ -6,17 +6,16 @@ import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.lerp
+import com.mc.gameengine.engine.physics.RigidBody
 import com.mc.gameengine.engine.physics.Shape
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
-import org.jbox2d.dynamics.Body
 
 open class Instance {
 
-    private lateinit var context: WorldContext
+    internal lateinit var context: WorldContext
     private var previous = TransformState()
     protected var current = TransformState()
-    private var body: Body? = null
 
     fun currentState(): TransformState = current
 
@@ -27,8 +26,8 @@ open class Instance {
 
     internal fun onRemovedFromScene() {
         onExitScene()
+        context.physicsManager().verifyOwnerRemoved(this)
         context.clearInstanceColliders(this)
-        body?.let { context.physicsWorld().destroyBody(it) }
     }
 
     internal fun onUpdate(dt: Float) {
@@ -59,9 +58,7 @@ open class Instance {
 
     protected fun audioPlayer() = context.audioPlayer()
 
-    protected fun viewportSize() = context.viewportSize()
-
-    protected fun viewportScale() = context.viewportScale()
+    protected fun viewport() = context.viewport()
 
     protected fun fromViewport(position: Vec2) = context.calculateFromViewport(position)
 
@@ -97,33 +94,17 @@ open class Instance {
         current = current.copy(pivot = block(current.pivot))
     }
 
-    protected fun bodyCollider(): Collider? {
-        return (body?.userData as? Collider)?.apply {
-            update { context.physicsWorld().getTransformState(body!!) }
-        }
-    }
-
-    protected fun createRigidBody(
+    protected fun RigidBody.Companion.create(
         shape: Shape,
         state: TransformState,
         type: CollisionBodyType = CollisionBodyType.Dynamic,
         material: PhysicsMaterial = PhysicsMaterial()
-    ) {
-        body = context.physicsWorld().createRigidBody(shape, state, type, material)
-    }
-
-    protected fun applyImpulseTowards(
-        target: Vec2,
-        force: Float = 40f,
-        point: Vec2? = null
-    ) {
-        body?.let {
-            context.physicsWorld().applyImpulseTowards(
-                it,
-                target,
-                force,
-                point
-            )
-        }
+    ) = run {
+        createBody(
+            shape = shape,
+            state = state,
+            type = type,
+            material = material
+        )
     }
 }

@@ -9,9 +9,9 @@ import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.input.touch.TouchEvent
 import com.mc.gameengine.engine.input.touch.TouchListener
 import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.math.clamp
 import com.mc.gameengine.engine.math.length
 import com.mc.gameengine.engine.math.minus
+import com.mc.gameengine.engine.physics.RigidBody
 import com.mc.gameengine.engine.physics.Shape
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
@@ -24,17 +24,15 @@ class BallLauncher(
 
     private var nextBall = 0
     private val ballSpecs = listOf(
-        BallSpec(radius = 24f, density = 1.0f, color = Color(0xFFe53935)),
-        BallSpec(radius = 30f, density = 1.4f, color = Color(0xFF1e88e5)),
-        BallSpec(radius = 38f, density = 1.8f, color = Color(0xFF43a047)),
+        BallSpec(radius = 24f, density = 1.1f, color = Color(0xFFe53935)),
+        BallSpec(radius = 30f, density = 1.35f, color = Color(0xFF1e88e5)),
+        BallSpec(radius = 38f, density = 1.6f, color = Color(0xFF43a047)),
     )
 
     override fun onEnterScene() {
-        current = current.copy(position = Vec2(viewportSize().x / 2f, floorY), pivot = Pivot.Center)
-        val shape = Shape.BoxShape(Vec2(viewportSize().x, 10f))
-        createRigidBody(
-            shape = shape,
-            state = current,
+        RigidBody.create(
+            shape = Shape.BoxShape(Vec2(viewport().size.x, 10f)),
+            state = TransformState(position = Vec2(viewport().size.x / 2f, floorY)),
             type = CollisionBodyType.Static
         )
     }
@@ -45,7 +43,7 @@ class BallLauncher(
         val worldTap = screenToWorld(event.position)
         val direction = (worldTap - launchPoint)
         if (direction.length() < 100f) return
-        val velocity = direction.length() * 0.03f
+        val velocity = direction.length() * 0.8f
         val spec = ballSpecs[nextBall]
         nextBall = (nextBall + 1) % ballSpecs.size
 

@@ -11,7 +11,6 @@ import com.mc.gameengine.engine.math.minus
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.input.sensor.SensorListener
-import com.mc.gameengine.engine.physics.PhysicsSimulationMode
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
@@ -22,13 +21,13 @@ class MovingSphere : Instance(), SensorListener {
     private val speed = 500f
 
     override fun onEnterScene() {
-        updatePosition { viewportSize() / 2f }
+        updatePosition { viewport().size / 2f }
     }
 
     override fun fixedUpdate(dt: Float) {
 
         val minMoving = Vec2.Zero + 50f
-        val maxMoving = viewportSize() - 50f
+        val maxMoving = viewport().size - 50f
         val clamped = current.position.clamp(minMoving, maxMoving)
 
         if (clamped != current.position) {
@@ -48,7 +47,7 @@ class MovingSphere : Instance(), SensorListener {
                 "\npitch: ${event.value.x}" +
                 "\nroll: ${event.value.y}" +
                 "\nyaw: ${event.value.z}" +
-                "\nsize: ${viewportSize()}"
+                "\nsize: ${viewport()}"
         updatePosition { it + (Vec2(event.value.y, event.value.x) * speed) }
     }
 

@@ -5,8 +5,8 @@ import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
+import com.mc.gameengine.engine.physics.RigidBody
 import com.mc.gameengine.engine.physics.Shape
-import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 import com.mc.gameengine.game.instance.spec.BallSpec
 
@@ -18,14 +18,12 @@ class ProjectileBall(
 ) : Instance() {
 
     private var livedSeconds = 0f
+    private lateinit var ball: RigidBody
 
     override fun onEnterScene() {
-        current = current.copy(position = start, pivot = Pivot.TopLeft)
-        // Crear cuerpo JBox2D dinámico
-        val shape = Shape.CircleShape(spec.radius)
-        createRigidBody(
-            shape = shape,
-            state = current,
+        ball = RigidBody.create(
+            shape = Shape.CircleShape(spec.radius),
+            state = TransformState(position = start),
             type = CollisionBodyType.Dynamic,
             material = PhysicsMaterial(
                 density = spec.density,
@@ -33,10 +31,11 @@ class ProjectileBall(
                 restitution = 0.5f
             )
         )
-        applyImpulseTowards(target, velocity)
+        ball.applyImpulseTowards(target, velocity)
     }
 
     override fun fixedUpdate(dt: Float) {
+        if (!::ball.isInitialized) return
         if (livedSeconds >= 15f || isOutOfScreen()) {
             deleteInstance(this)
         }
@@ -47,18 +46,18 @@ class ProjectileBall(
     }
 
     private fun isOutOfScreen(): Boolean {
+        if (!::ball.isInitialized) return false
+        val pos = ball.transformState.position
         val margin = 180f
-        val view = viewportSize()
-        return current.position.x < -margin ||
-            current.position.x > view.x + margin ||
-            current.position.y < -margin ||
-            current.position.y > view.y + margin
+        val view = viewport().size
+        return pos.x < -margin || pos.x > view.x + margin || pos.y < -margin || pos.y > view.y + margin
     }
 
     override fun Renderer.onRender(state: TransformState) {
+        if (!::ball.isInitialized) return
         drawCircle(
             radius = spec.radius,
-            state = state,
+            state = ball.transformState,
             color = spec.color
         )
     }

@@ -42,14 +42,14 @@ class Obstacle : Instance() {
     }
 
     override fun fixedUpdate(dt: Float) {
-        collider.update { it.copy(position = viewportSize() / 1.5f) }
-        collider2.update { it.copy(position = viewportSize() / 3f) }
+        collider.update { it.copy(position = viewport().size / 1.5f) }
+        collider2.update { it.copy(position = viewport().size / 3f) }
         collisionText = "not collisioned"
     }
 
     override fun Renderer.onRender(state: TransformState) {
         drawText(
-            position = Vec2(x = 100f, viewportSize().y - 100),
+            position = Vec2(x = 100f, viewport().size.y - 100),
             text = collisionText,
             deep = RenderDepth.DEBUG
         )
