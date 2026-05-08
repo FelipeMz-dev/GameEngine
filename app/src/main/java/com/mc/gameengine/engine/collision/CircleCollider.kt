@@ -2,13 +2,13 @@ package com.mc.gameengine.engine.collision
 
 import androidx.compose.ui.graphics.Color
 import com.mc.gameengine.engine.compose.RenderDepth
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.math.AABB
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.render.Renderer
 
 class CircleCollider(
-    override val owner: Instance,
+    override val owner: GameObject,
     val radius: Float
 ) : Collider(owner), CollisionCenterDelegate by CollisionCenterDelegateImpl() {
 

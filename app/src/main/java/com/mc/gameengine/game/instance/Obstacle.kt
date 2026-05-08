@@ -6,14 +6,14 @@ import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.collision.CollisionLayers
 import com.mc.gameengine.engine.collision.EllipseCollider
 import com.mc.gameengine.engine.compose.RenderDepth
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.div
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
-class Obstacle : Instance() {
+class Obstacle : GameObject() {
 
     var collisionText = String()
 

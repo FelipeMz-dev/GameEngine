@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.media.SoundPool
 import com.mc.gameengine.engine.core.AudioId
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.length
 import com.mc.gameengine.engine.math.minus
@@ -33,11 +33,11 @@ class AudioManager(context: Context): AudioPlayer {
         musics[id] = resId
     }
 
-    internal fun registerListener(instance: Instance) {
+    internal fun registerListener(instance: GameObject) {
         (instance as? AudioListener)?.let { listeners += it }
     }
 
-    internal fun unregisterListener(instance: Instance) {
+    internal fun unregisterListener(instance: GameObject) {
         (instance as? AudioListener)?.let { listeners -= it }
     }
 

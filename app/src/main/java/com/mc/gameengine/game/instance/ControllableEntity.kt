@@ -11,7 +11,7 @@ import com.mc.gameengine.engine.collision.CollisionListener
 import com.mc.gameengine.engine.collision.CollisionPhase
 import com.mc.gameengine.engine.collision.EllipseCollider
 import com.mc.gameengine.engine.collision.PolygonalCollider
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.input.keyboard.KeyboardEvent
 import com.mc.gameengine.engine.input.keyboard.KeyboardListener
@@ -20,9 +20,8 @@ import com.mc.gameengine.engine.math.minus
 import com.mc.gameengine.engine.math.plus
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
-import com.mc.gameengine.game.instance.Obstacle
 
-class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
+class ControllableEntity : GameObject(), CollisionListener, KeyboardListener {
 
     private val speed = 400f
 

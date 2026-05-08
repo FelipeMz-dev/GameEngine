@@ -1,6 +1,6 @@
 package com.mc.gameengine.engine.collision
 
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 
 internal class CollisionSystem(
     private val broadPhase: BroadPhase = SpatialHashBroadPhase()
@@ -20,7 +20,7 @@ internal class CollisionSystem(
         removeActivePairsFor(collider)
     }
 
-    fun clearInstanceColliders(instance: Instance) {
+    fun clearInstanceColliders(instance: GameObject) {
         val toRemove = colliders.filter { it.owner == instance }
         colliders.removeAll(toRemove)
         toRemove.forEach { removeActivePairsFor(it) }

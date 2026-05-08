@@ -3,7 +3,7 @@ package com.mc.gameengine.game.instance
 import androidx.compose.ui.graphics.Color
 import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.collision.PhysicsMaterial
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.physics.RigidBody
@@ -15,7 +15,7 @@ class StackBlock(
     private val size: Vec2,
     val density: Float,
     private val color: Color,
-) : Instance() {
+) : GameObject() {
 
     private lateinit var block: RigidBody
 
@@ -36,7 +36,7 @@ class StackBlock(
         if (!::block.isInitialized) return
         current = block.transformState
         if (isOutOfScreen()) {
-            deleteInstance(this)
+            removeGameObject(this)
         }
     }
 

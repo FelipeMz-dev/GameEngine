@@ -1,6 +1,5 @@
 package com.mc.gameengine.engine.assets
 
-import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.SpriteId
 import com.mc.gameengine.engine.core.TransformState
 

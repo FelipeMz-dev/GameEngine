@@ -2,25 +2,25 @@ package com.mc.gameengine.engine.core
 
 internal class SceneEntityManager {
 
-    private val activeInstances = mutableListOf<Instance>()
-    private val pendingAdditions = mutableListOf<Instance>()
-    private val pendingRemovals = mutableListOf<Instance>()
+    private val activeInstances = mutableListOf<GameObject>()
+    private val pendingAdditions = mutableListOf<GameObject>()
+    private val pendingRemovals = mutableListOf<GameObject>()
 
-    fun enqueueAdd(instance: Instance) {
+    fun enqueueAdd(instance: GameObject) {
         pendingAdditions += instance
     }
 
-    fun enqueueRemove(instance: Instance) {
+    fun enqueueRemove(instance: GameObject) {
         pendingRemovals += instance
     }
 
-    fun enqueueRemoveWhere(predicate: (Instance) -> Boolean) {
+    fun enqueueRemoveWhere(predicate: (GameObject) -> Boolean) {
         pendingRemovals += activeInstances.filter(predicate)
     }
 
     fun sync(
-        onRemoved: (Instance) -> Unit,
-        onAdded: (Instance) -> Unit
+        onRemoved: (GameObject) -> Unit,
+        onAdded: (GameObject) -> Unit
     ) {
         if (pendingRemovals.isNotEmpty()) {
             pendingRemovals.forEach { instance ->
@@ -39,7 +39,7 @@ internal class SceneEntityManager {
         }
     }
 
-    inline fun forEach(action: (Instance) -> Unit) {
+    inline fun forEach(action: (GameObject) -> Unit) {
         activeInstances.forEach(action)
     }
 }

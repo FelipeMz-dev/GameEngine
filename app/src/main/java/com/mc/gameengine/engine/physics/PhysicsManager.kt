@@ -2,7 +2,7 @@ package com.mc.gameengine.engine.physics
 
 import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.collision.PhysicsMaterial
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.times
@@ -27,7 +27,7 @@ class PhysicsManager(
     }
 
     internal fun createRigidBody(
-        owner: Instance,
+        owner: GameObject,
         config: RigidBodyConfig,
     ): RigidBody {
         val body = createBody(owner, config)
@@ -35,7 +35,7 @@ class PhysicsManager(
     }
 
     internal fun createRigidBody(
-        owner: Instance,
+        owner: GameObject,
         shape: Shape,
         state: TransformState = TransformState(),
         type: CollisionBodyType = CollisionBodyType.Dynamic,
@@ -55,7 +55,7 @@ class PhysicsManager(
     }
 
     private fun createBody(
-        owner: Instance,
+        owner: GameObject,
         config: RigidBodyConfig,
     ): Body {
         val body = Body()
@@ -156,7 +156,7 @@ class PhysicsManager(
         body.addFixture(jShape)
     }
 
-    internal fun verifyOwnerRemoved(owner: Instance) {
+    internal fun verifyOwnerRemoved(owner: GameObject) {
         val bodies = world.bodies.filter { it.userData == owner }
         bodies.forEach { world.removeBody(it) }
     }

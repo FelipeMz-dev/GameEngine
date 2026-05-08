@@ -15,7 +15,7 @@ class CollisionScene : GameScene() {
     private val floorY = 700f
 
     init {
-        addInstance(BallLauncher(launchPoint = Vec2(180f, floorY - 100f), floorY = floorY))
+        spawnGameObject(BallLauncher(launchPoint = Vec2(180f, floorY - 100f), floorY = floorY))
         buildStructure()
     }
 
@@ -60,7 +60,7 @@ class CollisionScene : GameScene() {
         )
 
         blockSpecs.forEach { spec ->
-            addInstance(
+            spawnGameObject(
                 StackBlock(
                     start = spec.position,
                     size = spec.size,

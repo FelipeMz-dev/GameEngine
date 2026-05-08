@@ -13,7 +13,7 @@ import com.mc.gameengine.engine.physics.Shape
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
-open class Instance {
+open class GameObject {
 
     internal lateinit var context: WorldContext
     private var previous = TransformState()
@@ -66,9 +66,9 @@ open class Instance {
 
     protected fun spriteSize(id: SpriteId) = context.spriteSize(id)
 
-    protected fun addInstance(instance: Instance) = context.addInstance(instance)
+    protected fun spawnGameObject(gameObject: GameObject) = context.spawnGameObject(gameObject)
 
-    protected fun deleteInstance(instance: Instance) = context.deleteInstance(instance)
+    protected fun removeGameObject(gameObject: GameObject) = context.removeGameObject(gameObject)
 
     protected fun addCollider(collider: Collider) = context.addCollider(collider)
 
@@ -118,26 +118,6 @@ open class Instance {
                 material = material,
                 physicState = physicState,
             )
-        )
-    }
-
-    @Deprecated(
-        message = "Use createRigidBody(...) directly from Instance instead.",
-        replaceWith = ReplaceWith("createRigidBody(shape, state, type, material, physicState)")
-    )
-    protected fun RigidBody.Companion.create(
-        shape: Shape,
-        state: TransformState = current,
-        type: CollisionBodyType = CollisionBodyType.Dynamic,
-        material: PhysicsMaterial = PhysicsMaterial(),
-        physicState: PhysicState = PhysicState(),
-    ): RigidBody {
-        return createRigidBody(
-            shape = shape,
-            state = state,
-            type = type,
-            material = material,
-            physicState = physicState,
         )
     }
 }

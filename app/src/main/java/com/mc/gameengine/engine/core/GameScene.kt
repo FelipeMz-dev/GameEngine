@@ -47,11 +47,11 @@ abstract class GameScene(
 
     override fun spriteSize(id: SpriteId) = spriteManager.getSize(id)
 
-    override fun addInstance(instance: Instance) {
+    override fun spawnGameObject(instance: GameObject) {
         entities.enqueueAdd(instance)
     }
 
-    override fun deleteInstance(instance: Instance) {
+    override fun removeGameObject(instance: GameObject) {
         entities.enqueueRemove(instance)
     }
 
@@ -64,7 +64,7 @@ abstract class GameScene(
         collisionSystem.removeCollider(collider)
     }
 
-    override fun clearInstanceColliders(instance: Instance) {
+    override fun clearInstanceColliders(instance: GameObject) {
         collisionSystem.clearInstanceColliders(instance)
     }
 
@@ -162,7 +162,7 @@ abstract class GameScene(
         )
     }
 
-    private fun Renderer.debug(instance: Instance) {
+    private fun Renderer.debug(instance: GameObject) {
         drawAxis(
             position = instance.currentState().position,
             deep = RenderDepth.DEBUG

@@ -25,5 +25,4 @@ class RigidBody internal constructor(
     val type: CollisionBodyType
         get() = type()
 
-    companion object {}
 }
