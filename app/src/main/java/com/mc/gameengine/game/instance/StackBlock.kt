@@ -20,7 +20,7 @@ class StackBlock(
     private lateinit var block: RigidBody
 
     override fun onEnterScene() {
-        block = RigidBody.create(
+        block = createRigidBody(
             shape = Shape.BoxShape(size),
             state = TransformState(position = start),
             type = CollisionBodyType.Dynamic,

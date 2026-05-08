@@ -7,7 +7,7 @@ enum class CollisionPhase {
 }
 
 data class CollisionEvent(
-    val self: Any, // Puede ser Collider o Fixture
-    val other: Any, // Puede ser Collider o Fixture
+    val self: Any, // Collider legacy o SensorCollider backed by dyn4j.
+    val other: Any, // Collider legacy o SensorCollider backed by dyn4j.
     val phase: CollisionPhase
 )

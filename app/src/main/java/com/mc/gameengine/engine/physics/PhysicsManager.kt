@@ -1,15 +1,24 @@
 package com.mc.gameengine.engine.physics
 
 import com.mc.gameengine.engine.collision.CollisionBodyType
+import com.mc.gameengine.engine.collision.CollisionEvent
+import com.mc.gameengine.engine.collision.CollisionListener
+import com.mc.gameengine.engine.collision.CollisionPhase
 import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.core.Instance
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.render.Pivot
+import org.dyn4j.collision.CategoryFilter
 import org.dyn4j.dynamics.Body
+import org.dyn4j.dynamics.BodyFixture
+import org.dyn4j.dynamics.contact.Contact
+import org.dyn4j.geometry.Transform
 import org.dyn4j.geometry.Vector2
+import org.dyn4j.world.ContactCollisionData
 import org.dyn4j.world.World
+import org.dyn4j.world.listener.ContactListenerAdapter
 import kotlin.math.sqrt
 
 class PhysicsManager(
@@ -18,8 +27,10 @@ class PhysicsManager(
 ) {
 
     private val factor = Dyn4jFactor(pixelsPerMeter)
+    private val sensorPairs = mutableMapOf<SensorPairKey, Int>()
     internal val world = World<Body>().apply {
-        this@apply.gravity = Vector2(gravity.x.toDouble(),gravity.y.toDouble())
+        this@apply.gravity = Vector2(gravity.x.toDouble(), gravity.y.toDouble())
+        addContactListener(SensorContactListener())
     }
 
     internal fun update(dt: Float) {
@@ -28,29 +39,84 @@ class PhysicsManager(
 
     internal fun createRigidBody(
         owner: Instance,
+        config: RigidBodyConfig,
+    ): RigidBody {
+        val body = createBody(owner, config)
+        return RigidBody(body = body, manager = this)
+    }
+
+    internal fun createSensorCollider(
+        owner: Instance,
+        config: SensorColliderConfig,
+    ): SensorCollider {
+        val body = createBody(
+            owner = owner,
+            config = RigidBodyConfig(
+                shape = config.shape,
+                state = config.state,
+                type = config.type,
+                physicState = config.physicState,
+            ),
+            isSensor = true,
+        )
+        val sensor = SensorCollider(
+            owner = owner,
+            body = body,
+            manager = this,
+            layer = config.layer,
+            mask = config.mask,
+        )
+        body.fixtures.forEach { fixture ->
+            fixture.userData = sensor
+            fixture.filter = CategoryFilter(config.layer.toLong(), config.mask.toLong())
+        }
+        return sensor
+    }
+
+    internal fun createRigidBody(
+        owner: Instance,
         shape: Shape,
-        state: TransformState,
+        state: TransformState = TransformState(),
         type: CollisionBodyType = CollisionBodyType.Dynamic,
-        material: PhysicsMaterial? = null
+        material: PhysicsMaterial = PhysicsMaterial(),
+        physicState: PhysicState = PhysicState(),
+    ): RigidBody {
+        return createRigidBody(
+            owner = owner,
+            config = RigidBodyConfig(
+                shape = shape,
+                state = state,
+                type = type,
+                material = material,
+                physicState = physicState,
+            )
+        )
+    }
+
+    private fun createBody(
+        owner: Instance,
+        config: RigidBodyConfig,
+        isSensor: Boolean = false,
     ): Body {
         val body = Body()
-        val angleRadians = factor.degToRad(state.angle)
-        val positionMeters = factor.toDyn4j(state.position)
-        val massType = factor.toDyn4j(type)
-        val scaledShape = scaleShape(shape, state.scale)
+        val angleRadians = factor.degToRad(config.state.angle)
+        val positionMeters = factor.toDyn4j(config.state.position)
+        val massType = factor.toDyn4j(config.type)
+        val scaledShape = scaleShape(config.shape, config.state.scale)
         val jShape = factor.toDyn4j(scaledShape)
         val fixture = body.addFixture(jShape)
 
-        material?.apply {
-            fixture.density = material.density.toDouble()
-            fixture.friction = material.friction.toDouble()
-            fixture.restitution = material.restitution.toDouble()
-        }
+        fixture.density = config.material.density.toDouble()
+        fixture.friction = config.material.friction.toDouble()
+        fixture.restitution = config.material.restitution.toDouble()
+        fixture.isSensor = isSensor
 
         body.userData = owner
+        if (isSensor) body.gravityScale = 0.0
         body.setMass(massType)
         body.rotate(angleRadians)
         body.translate(positionMeters)
+        updateBodyPhysicState(body, config.physicState)
 
         world.addBody(body)
         return body
@@ -66,10 +132,10 @@ class PhysicsManager(
     }
 
     internal fun updateBodyTransform(body: Body, state: TransformState) {
-        val angleRadians = factor.degToRad(state.angle)
-        val positionMeters = factor.toDyn4j(state.position)
-        body.rotate(angleRadians)
-        body.translate(positionMeters)
+        val transform = Transform()
+        transform.setRotation(factor.degToRad(state.angle))
+        transform.setTranslation(factor.toDyn4j(state.position))
+        body.setTransform(transform)
     }
 
     internal fun getPhysicState(body: Body): PhysicState {
@@ -126,15 +192,18 @@ class PhysicsManager(
     }
 
     internal fun updateBodyShape(body: Body, transformState: TransformState, shape: Shape) {
+        val previousFixture = body.fixtures.firstOrNull()
         val scaledShape = scaleShape(shape, transformState.scale)
         val jShape = factor.toDyn4j(scaledShape)
         body.removeAllFixtures()
-        body.addFixture(jShape)
+        val fixture = body.addFixture(jShape)
+        previousFixture?.copyRuntimeFlagsTo(fixture)
     }
 
     internal fun verifyOwnerRemoved(owner: Instance) {
         val bodies = world.bodies.filter { it.userData == owner }
-        bodies.forEach { world.removeBody(it) }
+        bodies.forEach { removeBody(it) }
+        sensorPairs.keys.removeIf { key -> key.includes(owner) }
     }
 
     internal fun applyImpulseTowards(
@@ -183,6 +252,10 @@ class PhysicsManager(
     }
 
     internal fun removeBody(body: Body) {
+        val sensors = body.fixtures.mapNotNull { it.userData as? SensorCollider }
+        if (sensors.isNotEmpty()) {
+            sensorPairs.keys.removeIf { key -> sensors.any { sensor -> key.includes(sensor) } }
+        }
         world.removeBody(body)
     }
 
@@ -197,6 +270,89 @@ class PhysicsManager(
             is Shape.CircleShape -> {
                 val avgScale = (scale.x + scale.y) / 2f
                 Shape.CircleShape(shape.radius * avgScale)
+            }
+        }
+    }
+
+    private fun BodyFixture.copyRuntimeFlagsTo(target: BodyFixture) {
+        target.density = density
+        target.friction = friction
+        target.restitution = restitution
+        target.isSensor = isSensor
+        target.filter = filter
+        target.userData = userData
+    }
+
+    private fun handleSensorContact(
+        data: ContactCollisionData<Body>,
+        phase: CollisionPhase,
+    ) {
+        val sensorA = data.fixture1.userData as? SensorCollider ?: return
+        val sensorB = data.fixture2.userData as? SensorCollider ?: return
+        if (phase != CollisionPhase.Exit && !sensorA.canNotify(sensorB)) return
+
+        val key = SensorPairKey.from(sensorA, sensorB)
+        when (phase) {
+            CollisionPhase.Enter -> {
+                val contacts = sensorPairs[key] ?: 0
+                sensorPairs[key] = contacts + 1
+                if (contacts == 0) dispatch(sensorA, sensorB, CollisionPhase.Enter)
+            }
+
+            CollisionPhase.Stay -> dispatch(sensorA, sensorB, CollisionPhase.Stay)
+
+            CollisionPhase.Exit -> {
+                val remainingContacts = ((sensorPairs[key] ?: 1) - 1).coerceAtLeast(0)
+                if (remainingContacts == 0) {
+                    sensorPairs.remove(key)
+                    dispatch(sensorA, sensorB, CollisionPhase.Exit)
+                } else {
+                    sensorPairs[key] = remainingContacts
+                }
+            }
+        }
+    }
+
+    private fun dispatch(a: SensorCollider, b: SensorCollider, phase: CollisionPhase) {
+        (a.owner as? CollisionListener)?.onCollision(CollisionEvent(a, b, phase))
+        (b.owner as? CollisionListener)?.onCollision(CollisionEvent(b, a, phase))
+    }
+
+    private inner class SensorContactListener : ContactListenerAdapter<Body>() {
+        override fun begin(collision: ContactCollisionData<Body>, contact: Contact) {
+            handleSensorContact(collision, CollisionPhase.Enter)
+        }
+
+        override fun persist(
+            collision: ContactCollisionData<Body>,
+            oldContact: Contact,
+            newContact: Contact,
+        ) {
+            handleSensorContact(collision, CollisionPhase.Stay)
+        }
+
+        override fun end(collision: ContactCollisionData<Body>, contact: Contact) {
+            handleSensorContact(collision, CollisionPhase.Exit)
+        }
+    }
+}
+
+private data class SensorPairKey(
+    val minId: Int,
+    val maxId: Int,
+    val ownerA: Instance,
+    val ownerB: Instance,
+) {
+    fun includes(owner: Instance): Boolean = ownerA == owner || ownerB == owner
+
+    fun includes(sensor: SensorCollider): Boolean = minId == sensor.id || maxId == sensor.id
+
+    companion object {
+        fun from(a: SensorCollider, b: SensorCollider): SensorPairKey {
+            return if (a.id <= b.id) {
+                SensorPairKey(a.id, b.id, a.owner, b.owner)
+            } else {
+                SensorPairKey(b.id, a.id, b.owner, a.owner)
             }
         }
     }

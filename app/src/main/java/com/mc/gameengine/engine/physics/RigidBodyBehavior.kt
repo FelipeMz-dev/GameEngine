@@ -7,7 +7,7 @@ import com.mc.gameengine.engine.math.Vec2
 import org.dyn4j.dynamics.Body
 
 open class RigidBodyBehavior(
-    private val body: Body,
+    protected val body: Body,
     private val manager: PhysicsManager
 ) {
 

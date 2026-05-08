@@ -59,11 +59,8 @@ internal class Dyn4jFactor(private var pixelsPerMeter: Float) {
             }
 
             is Shape.PolygonShape -> {
-                val vertices = Vector2()
-                shape.vertices.forEach {
-                    vertices.add(toDyn4j(it))
-                }
-                val polygonShape = Polygon(vertices)
+                val vertices = shape.vertices.map { toDyn4j(it) }.toTypedArray()
+                val polygonShape = Polygon(*vertices)
                 polygonShape
             }
 

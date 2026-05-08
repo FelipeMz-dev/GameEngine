@@ -3,10 +3,15 @@ package com.mc.gameengine.engine.core
 import com.mc.gameengine.engine.assets.Sprite
 import com.mc.gameengine.engine.collision.Collider
 import com.mc.gameengine.engine.collision.CollisionBodyType
+import com.mc.gameengine.engine.collision.CollisionLayers
 import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.lerp
+import com.mc.gameengine.engine.physics.PhysicState
 import com.mc.gameengine.engine.physics.RigidBody
+import com.mc.gameengine.engine.physics.RigidBodyConfig
+import com.mc.gameengine.engine.physics.SensorCollider
+import com.mc.gameengine.engine.physics.SensorColliderConfig
 import com.mc.gameengine.engine.physics.Shape
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
@@ -94,17 +99,75 @@ open class Instance {
         current = current.copy(pivot = block(current.pivot))
     }
 
+    protected fun createRigidBody(config: RigidBodyConfig): RigidBody {
+        return context.physicsManager().createRigidBody(
+            owner = this,
+            config = config
+        )
+    }
+
+    protected fun createRigidBody(
+        shape: Shape,
+        state: TransformState = current,
+        type: CollisionBodyType = CollisionBodyType.Dynamic,
+        material: PhysicsMaterial = PhysicsMaterial(),
+        physicState: PhysicState = PhysicState(),
+    ): RigidBody {
+        return createRigidBody(
+            RigidBodyConfig(
+                shape = shape,
+                state = state,
+                type = type,
+                material = material,
+                physicState = physicState,
+            )
+        )
+    }
+
+    protected fun createSensorCollider(config: SensorColliderConfig): SensorCollider {
+        return context.physicsManager().createSensorCollider(
+            owner = this,
+            config = config
+        )
+    }
+
+    protected fun createSensorCollider(
+        shape: Shape,
+        state: TransformState = current,
+        type: CollisionBodyType = CollisionBodyType.Static,
+        layer: Int = CollisionLayers.Default,
+        mask: Int = CollisionLayers.All,
+        physicState: PhysicState = PhysicState(),
+    ): SensorCollider {
+        return createSensorCollider(
+            SensorColliderConfig(
+                shape = shape,
+                state = state,
+                type = type,
+                layer = layer,
+                mask = mask,
+                physicState = physicState,
+            )
+        )
+    }
+
+    @Deprecated(
+        message = "Use createRigidBody(...) directly from Instance instead.",
+        replaceWith = ReplaceWith("createRigidBody(shape, state, type, material, physicState)")
+    )
     protected fun RigidBody.Companion.create(
         shape: Shape,
-        state: TransformState,
+        state: TransformState = current,
         type: CollisionBodyType = CollisionBodyType.Dynamic,
-        material: PhysicsMaterial = PhysicsMaterial()
-    ) = run {
-        createBody(
+        material: PhysicsMaterial = PhysicsMaterial(),
+        physicState: PhysicState = PhysicState(),
+    ): RigidBody {
+        return createRigidBody(
             shape = shape,
             state = state,
             type = type,
-            material = material
+            material = material,
+            physicState = physicState,
         )
     }
 }
