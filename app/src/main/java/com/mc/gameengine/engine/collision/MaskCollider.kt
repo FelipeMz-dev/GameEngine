@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 import com.mc.gameengine.engine.assets.SpriteManager
 import com.mc.gameengine.engine.assets.SpriteSource
 import com.mc.gameengine.engine.compose.RenderDepth
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.SpriteId
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.AABB
@@ -18,7 +18,7 @@ import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.render.Renderer
 
 class MaskCollider(
-    override val owner: Instance,
+    override val owner: GameObject,
     private var spriteId: SpriteId
 ) : Collider(owner),
     CollisionCenterDelegate by CollisionCenterDelegateImpl(),

@@ -1,7 +1,7 @@
 package com.mc.gameengine.game.instance
 
 import androidx.compose.ui.graphics.Color
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.input.sensor.SensorEvent
 import com.mc.gameengine.engine.math.Vec2
@@ -14,7 +14,7 @@ import com.mc.gameengine.engine.input.sensor.SensorListener
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
-class MovingSphere : Instance(), SensorListener {
+class MovingSphere : GameObject(), SensorListener {
 
     private var sensorState = "State:"
 

@@ -6,12 +6,14 @@ import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.lerp
+import com.mc.gameengine.engine.physics.PhysicState
 import com.mc.gameengine.engine.physics.RigidBody
+import com.mc.gameengine.engine.physics.RigidBodyConfig
 import com.mc.gameengine.engine.physics.Shape
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
 
-open class Instance {
+open class GameObject {
 
     internal lateinit var context: WorldContext
     private var previous = TransformState()
@@ -64,9 +66,9 @@ open class Instance {
 
     protected fun spriteSize(id: SpriteId) = context.spriteSize(id)
 
-    protected fun addInstance(instance: Instance) = context.addInstance(instance)
+    protected fun spawnGameObject(gameObject: GameObject) = context.spawnGameObject(gameObject)
 
-    protected fun deleteInstance(instance: Instance) = context.deleteInstance(instance)
+    protected fun removeGameObject(gameObject: GameObject) = context.removeGameObject(gameObject)
 
     protected fun addCollider(collider: Collider) = context.addCollider(collider)
 
@@ -94,17 +96,28 @@ open class Instance {
         current = current.copy(pivot = block(current.pivot))
     }
 
-    protected fun RigidBody.Companion.create(
+    protected fun createRigidBody(config: RigidBodyConfig): RigidBody {
+        return context.physicsManager().createRigidBody(
+            owner = this,
+            config = config
+        )
+    }
+
+    protected fun createRigidBody(
         shape: Shape,
-        state: TransformState,
+        state: TransformState = current,
         type: CollisionBodyType = CollisionBodyType.Dynamic,
-        material: PhysicsMaterial = PhysicsMaterial()
-    ) = run {
-        createBody(
-            shape = shape,
-            state = state,
-            type = type,
-            material = material
+        material: PhysicsMaterial = PhysicsMaterial(),
+        physicState: PhysicState = PhysicState(),
+    ): RigidBody {
+        return createRigidBody(
+            RigidBodyConfig(
+                shape = shape,
+                state = state,
+                type = type,
+                material = material,
+                physicState = physicState,
+            )
         )
     }
 }

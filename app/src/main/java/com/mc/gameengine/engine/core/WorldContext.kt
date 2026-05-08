@@ -12,20 +12,20 @@ internal interface WorldContext {
     fun camera2D(): Camera2D?
     fun viewport(): Viewport
     fun spriteSize(id: SpriteId): Vec2
-    fun deleteInstance(instance: Instance)
-    fun addInstance(instance: Instance)
+    fun removeGameObject(gameObject: GameObject)
+    fun spawnGameObject(gameObject: GameObject)
     fun addCollider(collider: Collider)
     fun removeCollider(collider: Collider)
-    fun clearInstanceColliders(instance: Instance)
+    fun clearInstanceColliders(instance: GameObject)
     fun calculateFromViewport(position: Vec2): Vec2
     fun screenToWorld(position: Vec2): Vec2
     fun worldToScreen(position: Vec2): Vec2
 }
 
-internal inline fun <reified T : Instance> WorldContext.spawn(factory: () -> T): T {
+internal inline fun <reified T : GameObject> WorldContext.spawn(factory: () -> T): T {
     return InstanceContextProvider.runWithContext(this) {
         val instance = factory()
-        addInstance(instance)
+        spawnGameObject(instance)
         instance
     }
 }

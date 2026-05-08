@@ -2,7 +2,7 @@ package com.mc.gameengine.engine.physics
 
 import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.collision.PhysicsMaterial
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.times
@@ -27,30 +27,54 @@ class PhysicsManager(
     }
 
     internal fun createRigidBody(
-        owner: Instance,
+        owner: GameObject,
+        config: RigidBodyConfig,
+    ): RigidBody {
+        val body = createBody(owner, config)
+        return RigidBody(body = body, manager = this)
+    }
+
+    internal fun createRigidBody(
+        owner: GameObject,
         shape: Shape,
-        state: TransformState,
+        state: TransformState = TransformState(),
         type: CollisionBodyType = CollisionBodyType.Dynamic,
-        material: PhysicsMaterial? = null
+        material: PhysicsMaterial = PhysicsMaterial(),
+        physicState: PhysicState = PhysicState(),
+    ): RigidBody {
+        return createRigidBody(
+            owner = owner,
+            config = RigidBodyConfig(
+                shape = shape,
+                state = state,
+                type = type,
+                material = material,
+                physicState = physicState,
+            )
+        )
+    }
+
+    private fun createBody(
+        owner: GameObject,
+        config: RigidBodyConfig,
     ): Body {
         val body = Body()
-        val angleRadians = factor.degToRad(state.angle)
-        val positionMeters = factor.toDyn4j(state.position)
-        val massType = factor.toDyn4j(type)
-        val scaledShape = scaleShape(shape, state.scale)
+        val angleRadians = factor.degToRad(config.state.angle)
+        val positionMeters = factor.toDyn4j(config.state.position)
+        val massType = factor.toDyn4j(config.type)
+        val scaledShape = scaleShape(config.shape, config.state.scale)
         val jShape = factor.toDyn4j(scaledShape)
         val fixture = body.addFixture(jShape)
 
-        material?.apply {
-            fixture.density = material.density.toDouble()
-            fixture.friction = material.friction.toDouble()
-            fixture.restitution = material.restitution.toDouble()
-        }
+        fixture.density = config.material.density.toDouble()
+        fixture.friction = config.material.friction.toDouble()
+        fixture.restitution = config.material.restitution.toDouble()
 
         body.userData = owner
         body.setMass(massType)
         body.rotate(angleRadians)
         body.translate(positionMeters)
+        updateBodyPhysicState(body, config.physicState)
 
         world.addBody(body)
         return body
@@ -132,7 +156,7 @@ class PhysicsManager(
         body.addFixture(jShape)
     }
 
-    internal fun verifyOwnerRemoved(owner: Instance) {
+    internal fun verifyOwnerRemoved(owner: GameObject) {
         val bodies = world.bodies.filter { it.userData == owner }
         bodies.forEach { world.removeBody(it) }
     }

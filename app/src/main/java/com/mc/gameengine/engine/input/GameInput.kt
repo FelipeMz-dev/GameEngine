@@ -1,6 +1,6 @@
 package com.mc.gameengine.engine.input
 
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.input.keyboard.KeyboardListener
 import com.mc.gameengine.engine.input.keyboard.KeyboardManager
 import com.mc.gameengine.engine.input.keyboard.KeyboardProcessor
@@ -90,11 +90,11 @@ class GameInput private constructor(
         }
     }
 
-    fun register(instance: Instance) {
+    fun register(instance: GameObject) {
         bindings.forEach { it.register(instance) }
     }
 
-    fun unregister(instance: Instance) {
+    fun unregister(instance: GameObject) {
         bindings.forEach { it.unregister(instance) }
     }
 }

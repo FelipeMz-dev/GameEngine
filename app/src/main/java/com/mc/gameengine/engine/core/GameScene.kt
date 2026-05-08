@@ -18,7 +18,9 @@ import com.mc.gameengine.engine.math.times
 import com.mc.gameengine.engine.physics.PhysicsManager
 import com.mc.gameengine.engine.render.Renderer
 
-abstract class GameScene() : WorldContext {
+abstract class GameScene(
+    private val physicsManager: PhysicsManager = PhysicsManager(),
+) : WorldContext {
 
     private val entities = SceneEntityManager()
     private val collisionSystem = CollisionSystem()
@@ -36,8 +38,6 @@ abstract class GameScene() : WorldContext {
     private lateinit var gameInput: GameInput
 
     internal var camera2D: Camera2D = Camera2D()
-    private var physicsManager = PhysicsManager()
-
     private lateinit var viewport: Viewport
 
     override fun viewport() = viewport
@@ -47,11 +47,11 @@ abstract class GameScene() : WorldContext {
 
     override fun spriteSize(id: SpriteId) = spriteManager.getSize(id)
 
-    override fun addInstance(instance: Instance) {
+    override fun spawnGameObject(instance: GameObject) {
         entities.enqueueAdd(instance)
     }
 
-    override fun deleteInstance(instance: Instance) {
+    override fun removeGameObject(instance: GameObject) {
         entities.enqueueRemove(instance)
     }
 
@@ -64,7 +64,7 @@ abstract class GameScene() : WorldContext {
         collisionSystem.removeCollider(collider)
     }
 
-    override fun clearInstanceColliders(instance: Instance) {
+    override fun clearInstanceColliders(instance: GameObject) {
         collisionSystem.clearInstanceColliders(instance)
     }
 
@@ -162,7 +162,7 @@ abstract class GameScene() : WorldContext {
         )
     }
 
-    private fun Renderer.debug(instance: Instance) {
+    private fun Renderer.debug(instance: GameObject) {
         drawAxis(
             position = instance.currentState().position,
             deep = RenderDepth.DEBUG

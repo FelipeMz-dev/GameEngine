@@ -1,13 +1,13 @@
 package com.mc.gameengine.engine.collision
 
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.AABB
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.render.Renderer
 import java.util.concurrent.atomic.AtomicInteger
 
-abstract class Collider(open val owner: Instance) {
+abstract class Collider(open val owner: GameObject) {
 
     val id: Int = idCounter.incrementAndGet()
 

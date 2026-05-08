@@ -2,7 +2,7 @@ package com.mc.gameengine.game.instance
 
 import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.collision.PhysicsMaterial
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.physics.RigidBody
@@ -15,13 +15,13 @@ class ProjectileBall(
     private val target: Vec2,
     private val velocity: Float,
     private val spec: BallSpec,
-) : Instance() {
+) : GameObject() {
 
     private var livedSeconds = 0f
     private lateinit var ball: RigidBody
 
     override fun onEnterScene() {
-        ball = RigidBody.create(
+        ball = createRigidBody(
             shape = Shape.CircleShape(spec.radius),
             state = TransformState(position = start),
             type = CollisionBodyType.Dynamic,
@@ -37,7 +37,7 @@ class ProjectileBall(
     override fun fixedUpdate(dt: Float) {
         if (!::ball.isInitialized) return
         if (livedSeconds >= 15f || isOutOfScreen()) {
-            deleteInstance(this)
+            removeGameObject(this)
         }
     }
 

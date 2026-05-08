@@ -4,14 +4,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import com.mc.gameengine.engine.collision.CollisionBodyType
 import com.mc.gameengine.engine.compose.RenderDepth
-import com.mc.gameengine.engine.core.Instance
+import com.mc.gameengine.engine.core.GameObject
 import com.mc.gameengine.engine.core.TransformState
 import com.mc.gameengine.engine.input.touch.TouchEvent
 import com.mc.gameengine.engine.input.touch.TouchListener
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.length
 import com.mc.gameengine.engine.math.minus
-import com.mc.gameengine.engine.physics.RigidBody
 import com.mc.gameengine.engine.physics.Shape
 import com.mc.gameengine.engine.render.Pivot
 import com.mc.gameengine.engine.render.Renderer
@@ -20,7 +19,7 @@ import com.mc.gameengine.game.instance.spec.BallSpec
 class BallLauncher(
     private val launchPoint: Vec2 = Vec2(180f, 620f),
     private val floorY: Float = 700f
-) : Instance(), TouchListener {
+) : GameObject(), TouchListener {
 
     private var nextBall = 0
     private val ballSpecs = listOf(
@@ -30,7 +29,7 @@ class BallLauncher(
     )
 
     override fun onEnterScene() {
-        RigidBody.create(
+        createRigidBody(
             shape = Shape.BoxShape(Vec2(viewport().size.x, 10f)),
             state = TransformState(position = Vec2(viewport().size.x / 2f, floorY)),
             type = CollisionBodyType.Static
@@ -47,7 +46,7 @@ class BallLauncher(
         val spec = ballSpecs[nextBall]
         nextBall = (nextBall + 1) % ballSpecs.size
 
-        addInstance(
+        spawnGameObject(
             ProjectileBall(
                 start = launchPoint,
                 target = worldTap,
