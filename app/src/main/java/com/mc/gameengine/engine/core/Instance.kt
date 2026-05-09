@@ -8,6 +8,8 @@ import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.math.Vec2
 import com.mc.gameengine.engine.math.lerp
 import com.mc.gameengine.engine.physics.PhysicState
+import com.mc.gameengine.engine.physics.PhysicsJoint
+import com.mc.gameengine.engine.physics.PhysicsJointConfig
 import com.mc.gameengine.engine.physics.RigidBody
 import com.mc.gameengine.engine.physics.RigidBodyConfig
 import com.mc.gameengine.engine.physics.SensorCollider
@@ -147,6 +149,60 @@ open class Instance {
                 layer = layer,
                 mask = mask,
                 physicState = physicState,
+            )
+        )
+    }
+
+    protected fun createJoint(config: PhysicsJointConfig): PhysicsJoint {
+        return context.physicsManager().createJoint(config)
+    }
+
+    protected fun createDistanceJoint(
+        bodyA: RigidBody,
+        bodyB: RigidBody,
+        anchorA: Vec2 = bodyA.transformState.position,
+        anchorB: Vec2 = bodyB.transformState.position,
+        collisionAllowed: Boolean = false,
+    ): PhysicsJoint {
+        return createJoint(
+            PhysicsJointConfig.Distance(
+                bodyA = bodyA,
+                bodyB = bodyB,
+                anchorA = anchorA,
+                anchorB = anchorB,
+                collisionAllowed = collisionAllowed,
+            )
+        )
+    }
+
+    protected fun createRevoluteJoint(
+        bodyA: RigidBody,
+        bodyB: RigidBody,
+        anchor: Vec2 = bodyA.transformState.position,
+        collisionAllowed: Boolean = false,
+    ): PhysicsJoint {
+        return createJoint(
+            PhysicsJointConfig.Revolute(
+                bodyA = bodyA,
+                bodyB = bodyB,
+                anchor = anchor,
+                collisionAllowed = collisionAllowed,
+            )
+        )
+    }
+
+    protected fun createWeldJoint(
+        bodyA: RigidBody,
+        bodyB: RigidBody,
+        anchor: Vec2 = bodyA.transformState.position,
+        collisionAllowed: Boolean = false,
+    ): PhysicsJoint {
+        return createJoint(
+            PhysicsJointConfig.Weld(
+                bodyA = bodyA,
+                bodyB = bodyB,
+                anchor = anchor,
+                collisionAllowed = collisionAllowed,
             )
         )
     }

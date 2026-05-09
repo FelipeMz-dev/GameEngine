@@ -14,6 +14,9 @@ import org.dyn4j.collision.CategoryFilter
 import org.dyn4j.dynamics.Body
 import org.dyn4j.dynamics.BodyFixture
 import org.dyn4j.dynamics.contact.Contact
+import org.dyn4j.dynamics.joint.DistanceJoint
+import org.dyn4j.dynamics.joint.RevoluteJoint
+import org.dyn4j.dynamics.joint.WeldJoint
 import org.dyn4j.geometry.Transform
 import org.dyn4j.geometry.Vector2
 import org.dyn4j.world.ContactCollisionData
@@ -28,6 +31,7 @@ class PhysicsManager(
 
     private val factor = Dyn4jFactor(pixelsPerMeter)
     private val sensorPairs = mutableMapOf<SensorPairKey, Int>()
+    private val joints = mutableSetOf<PhysicsJoint>()
     internal val world = World<Body>().apply {
         this@apply.gravity = Vector2(gravity.x.toDouble(), gravity.y.toDouble())
         addContactListener(SensorContactListener())
@@ -91,6 +95,43 @@ class PhysicsManager(
                 physicState = physicState,
             )
         )
+    }
+
+
+    internal fun createJoint(config: PhysicsJointConfig): PhysicsJoint {
+        val bodyA = config.bodyA.dynBody
+        val bodyB = config.bodyB.dynBody
+        val dynJoint = when (config) {
+            is PhysicsJointConfig.Distance -> DistanceJoint(
+                bodyA,
+                bodyB,
+                factor.toDyn4j(config.anchorA),
+                factor.toDyn4j(config.anchorB),
+            )
+
+            is PhysicsJointConfig.Revolute -> RevoluteJoint(
+                bodyA,
+                bodyB,
+                factor.toDyn4j(config.anchor),
+            )
+
+            is PhysicsJointConfig.Weld -> WeldJoint(
+                bodyA,
+                bodyB,
+                factor.toDyn4j(config.anchor),
+            )
+        }
+        dynJoint.isCollisionAllowed = config.collisionAllowed
+        world.addJoint(dynJoint)
+
+        val joint = PhysicsJoint(
+            joint = dynJoint,
+            bodyA = bodyA,
+            bodyB = bodyB,
+            manager = this,
+        )
+        joints += joint
+        return joint
     }
 
     private fun createBody(
@@ -256,7 +297,19 @@ class PhysicsManager(
         if (sensors.isNotEmpty()) {
             sensorPairs.keys.removeIf { key -> sensors.any { sensor -> key.includes(sensor) } }
         }
+        joints
+            .filter { it.includes(body) }
+            .forEach { removeJoint(it) }
         world.removeBody(body)
+    }
+
+    internal fun removeJoint(joint: PhysicsJoint) {
+        world.removeJoint(joint.joint)
+        joints -= joint
+    }
+
+    internal fun toEngine(vector: Vector2): Vec2 {
+        return factor.toEngine(vector)
     }
 
     private fun scaleShape(shape: Shape, scale: Vec2): Shape {
