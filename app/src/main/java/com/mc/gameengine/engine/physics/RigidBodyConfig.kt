@@ -1,6 +1,7 @@
 package com.mc.gameengine.engine.physics
 
 import com.mc.gameengine.engine.collision.CollisionBodyType
+import com.mc.gameengine.engine.collision.CollisionLayers
 import com.mc.gameengine.engine.collision.PhysicsMaterial
 import com.mc.gameengine.engine.core.TransformState
 
@@ -16,4 +17,7 @@ data class RigidBodyConfig(
     val type: CollisionBodyType = CollisionBodyType.Dynamic,
     val material: PhysicsMaterial = PhysicsMaterial(),
     val physicState: PhysicState = PhysicState(),
+    val isSensor: Boolean = false,
+    val layer: Int = CollisionLayers.Default,
+    val mask: Int = CollisionLayers.All,
 )

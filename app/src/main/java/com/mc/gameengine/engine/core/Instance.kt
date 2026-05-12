@@ -114,6 +114,9 @@ open class Instance {
         type: CollisionBodyType = CollisionBodyType.Dynamic,
         material: PhysicsMaterial = PhysicsMaterial(),
         physicState: PhysicState = PhysicState(),
+        isSensor: Boolean = false,
+        layer: Int = CollisionLayers.Default,
+        mask: Int = CollisionLayers.All,
     ): RigidBody {
         return createRigidBody(
             RigidBodyConfig(
@@ -122,6 +125,9 @@ open class Instance {
                 type = type,
                 material = material,
                 physicState = physicState,
+                isSensor = isSensor,
+                layer = layer,
+                mask = mask,
             )
         )
     }
@@ -217,6 +223,9 @@ open class Instance {
         type: CollisionBodyType = CollisionBodyType.Dynamic,
         material: PhysicsMaterial = PhysicsMaterial(),
         physicState: PhysicState = PhysicState(),
+        isSensor: Boolean = false,
+        layer: Int = CollisionLayers.Default,
+        mask: Int = CollisionLayers.All,
     ): RigidBody {
         return createRigidBody(
             shape = shape,
@@ -224,6 +233,9 @@ open class Instance {
             type = type,
             material = material,
             physicState = physicState,
+            isSensor = isSensor,
+            layer = layer,
+            mask = mask,
         )
     }
 }
