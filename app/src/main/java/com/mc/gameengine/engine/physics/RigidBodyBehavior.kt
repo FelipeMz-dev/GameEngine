@@ -7,9 +7,12 @@ import com.mc.gameengine.engine.math.Vec2
 import org.dyn4j.dynamics.Body
 
 open class RigidBodyBehavior(
-    private val body: Body,
-    private val manager: PhysicsManager
+    protected val body: Body,
+    protected val manager: PhysicsManager
 ) {
+
+    internal val dynBody: Body
+        get() = body
 
     protected fun transformState(): TransformState {
         return manager.getTransformState(body)
