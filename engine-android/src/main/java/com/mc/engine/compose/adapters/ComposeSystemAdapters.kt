@@ -6,7 +6,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.mc.engine.AudioManager
 import com.mc.engine.input.SensorInputAdapter
 import com.mc.engine.input.SensorProcessor
-import com.mc.engine.input.sensor.SensorSystem
+import com.mc.engine.input.SensorSystem
 
 /**
  * Adaptadores Compose para crear sistemas agnósticos.
@@ -28,7 +28,7 @@ fun rememberSensorSystem(sensorProcessor: SensorProcessor): SensorSystem {
     val sensorSystem = remember {
         SensorInputAdapter(context, sensorProcessor)
     }
-    return sensorSystem as SensorSystem
+    return sensorSystem
 }
 
 /**
@@ -39,4 +39,3 @@ object AudioSystem {
         return AudioManager(context)
     }
 }
-

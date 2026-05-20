@@ -6,6 +6,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import com.mc.engine.assets.ImageLoaderImpl
 import com.mc.engine.assets.SpriteManager
+import com.mc.engine.AudioManager
 import com.mc.engine.audio.AudioSystem
 import com.mc.engine.input.GameInput
 import com.mc.engine.input.keyboard.KeyboardManager
@@ -32,10 +33,10 @@ fun rememberAudioSystem(block: (AudioSystem.() -> Unit) = {}): AudioSystem {
 }
 
 @Composable
-fun rememberSensorSystem(sensorProcessor: SensorProcessor): SensorProcessor {
+fun rememberSensorSystem(sensorProcessor: SensorProcessor): SensorInputAdapter {
     val context = LocalContext.current
     val sensorSystem = remember {
-        SensorInputAdapter(context, sensorProcessor) as SensorProcessor
+        SensorInputAdapter(context, sensorProcessor)
     }
     return sensorSystem
 }
@@ -67,14 +68,14 @@ fun rememberGameInput(): GameInput {
 
 @Composable
 fun rememberGameInput(
-    sensorManager: SensorManager? = null,
+    sensorProcessor: SensorProcessor? = null,
     touchManager: TouchManager? = null,
     keyboardManager: KeyboardManager? = null,
     mouseManager: MouseManager? = null
 ): GameInput {
     val gameInput = remember {
         val builder = GameInput.Builder()
-        sensorManager?.apply { builder.withSensor(this) }
+        sensorProcessor?.apply { builder.withSensor(this) }
         touchManager?.apply { builder.withTouch(this) }
         keyboardManager?.apply { builder.withKeyboard(this) }
         mouseManager?.apply { builder.withMouse(this) }
@@ -82,4 +83,3 @@ fun rememberGameInput(
     }
     return gameInput
 }
-

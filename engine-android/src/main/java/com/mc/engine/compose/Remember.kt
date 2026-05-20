@@ -10,11 +10,10 @@ import com.mc.engine.audio.AudioSystem
 import com.mc.engine.AudioManager
 import com.mc.engine.input.GameInput
 import com.mc.engine.input.SensorInputAdapter
+import com.mc.engine.input.SensorManager
 import com.mc.engine.input.SensorProcessor
 import com.mc.engine.input.keyboard.KeyboardManager
 import com.mc.engine.input.mouse.MouseManager
-import com.mc.engine.input.sensor.SensorManager
-import com.mc.engine.input.sensor.SensorSystem
 import com.mc.engine.input.touch.TouchManager
 
 @Composable
@@ -34,10 +33,10 @@ fun rememberAudioSystem(block: (AudioSystem.() -> Unit) = {}): AudioSystem {
 }
 
 @Composable
-fun rememberSensorSystem(sensorProcessor: SensorProcessor): SensorSystem {
+fun rememberSensorSystem(sensorProcessor: SensorProcessor): SensorInputAdapter {
     val context = LocalContext.current
     val sensorSystem = remember {
-        SensorInputAdapter(context, sensorProcessor) as SensorSystem
+        SensorInputAdapter(context, sensorProcessor)
     }
     return sensorSystem
 }
@@ -69,14 +68,14 @@ fun rememberGameInput(): GameInput {
 
 @Composable
 fun rememberGameInput(
-    sensorManager: SensorManager? = null,
+    sensorProcessor: SensorProcessor? = null,
     touchManager: TouchManager? = null,
     keyboardManager: KeyboardManager? = null,
     mouseManager: MouseManager? = null
 ): GameInput {
     val gameInput = remember {
         val builder = GameInput.Builder()
-        sensorManager?.apply { builder.withSensor(this) }
+        sensorProcessor?.apply { builder.withSensor(this) }
         touchManager?.apply { builder.withTouch(this) }
         keyboardManager?.apply { builder.withKeyboard(this) }
         mouseManager?.apply { builder.withMouse(this) }
