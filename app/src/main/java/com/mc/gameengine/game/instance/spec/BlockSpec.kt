@@ -1,7 +1,7 @@
 package com.mc.gameengine.game.instance.spec
 
 import androidx.compose.ui.graphics.Color
-import com.mc.gameengine.engine.math.Vec2
+import com.mc.engine.math.Vec2
 
 data class BlockSpec(
     val position: Vec2,

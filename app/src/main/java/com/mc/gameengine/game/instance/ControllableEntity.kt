@@ -2,22 +2,21 @@ package com.mc.gameengine.game.instance
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
-import com.mc.gameengine.engine.collision.CollisionBodyType
-import com.mc.gameengine.engine.collision.CollisionEvent
-import com.mc.gameengine.engine.collision.CollisionLayers
-import com.mc.gameengine.engine.collision.CollisionListener
-import com.mc.gameengine.engine.collision.CollisionPhase
-import com.mc.gameengine.engine.core.Instance
-import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.input.keyboard.KeyboardEvent
-import com.mc.gameengine.engine.input.keyboard.KeyboardListener
-import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.math.minus
-import com.mc.gameengine.engine.math.plus
-import com.mc.gameengine.engine.physics.SensorCollider
-import com.mc.gameengine.engine.physics.Shape
-import com.mc.gameengine.engine.render.Pivot
-import com.mc.gameengine.engine.render.Renderer
+import com.mc.engine.core.Instance
+import com.mc.engine.core.TransformState
+import com.mc.engine.input.keyboard.KeyboardEvent
+import com.mc.engine.input.keyboard.KeyboardListener
+import com.mc.engine.math.Vec2
+import com.mc.engine.math.minus
+import com.mc.engine.math.plus
+import com.mc.engine.physics.CollisionEvent
+import com.mc.engine.physics.CollisionLayers
+import com.mc.engine.physics.CollisionListener
+import com.mc.engine.physics.CollisionPhase
+import com.mc.engine.physics.SensorCollider
+import com.mc.engine.physics.Shape
+import com.mc.engine.render.Pivot
+import com.mc.engine.render.Renderer
 
 class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
 
@@ -34,7 +33,6 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
         sensor = createSensorCollider(
             shape = Shape.BoxShape(sensorSize),
             state = current.copy(pivot = Pivot.Center),
-            type = CollisionBodyType.Dynamic,
             layer = CollisionLayers.Player,
             mask = CollisionLayers.World,
         )
@@ -70,8 +68,8 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
     }
 
     override fun onCollision(event: CollisionEvent) {
-        val obstacle = when (event.other) {
-            is SensorCollider -> event.other.owner as? Obstacle
+        val obstacle = when (val other = event.other) {
+            is SensorCollider -> other.owner as? Obstacle
             else -> null
         } ?: return
 
@@ -92,14 +90,14 @@ class ControllableEntity : Instance(), CollisionListener, KeyboardListener {
         when (event) {
             is KeyboardEvent.KeyHeld -> {
                 when (event.key) {
-                    Key.Companion.A -> updateAngle { it + rotation * event.dt }
-                    Key.Companion.S -> updateAngle { it - rotation * event.dt }
-                    Key.Companion.Q -> updateScale { it + event.dt }
-                    Key.Companion.W -> updateScale { it - event.dt }
-                    Key.Companion.DirectionLeft -> updatePosition { it.copy(x = it.x - speed * event.dt) }
-                    Key.Companion.DirectionRight -> updatePosition { it.copy(x = it.x + speed * event.dt) }
-                    Key.Companion.DirectionUp -> updatePosition { it.copy(y = it.y - speed * event.dt) }
-                    Key.Companion.DirectionDown -> updatePosition { it.copy(y = it.y + speed * event.dt) }
+                    Key.A -> updateAngle { it + rotation * event.dt }
+                    Key.S -> updateAngle { it - rotation * event.dt }
+                    Key.Q -> updateScale { it + event.dt }
+                    Key.W -> updateScale { it - event.dt }
+                    Key.DirectionLeft -> updatePosition { it.copy(x = it.x - speed * event.dt) }
+                    Key.DirectionRight -> updatePosition { it.copy(x = it.x + speed * event.dt) }
+                    Key.DirectionUp -> updatePosition { it.copy(y = it.y - speed * event.dt) }
+                    Key.DirectionDown -> updatePosition { it.copy(y = it.y + speed * event.dt) }
                 }
             }
 

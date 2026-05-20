@@ -1,11 +1,11 @@
 package com.mc.gameengine.game.scene
 
 import androidx.compose.ui.graphics.Color
-import com.mc.gameengine.engine.core.GameScene
-import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.render.Pivot
-import com.mc.gameengine.engine.render.Renderer
+import com.mc.engine.core.GameScene
+import com.mc.engine.core.TransformState
+import com.mc.engine.math.Vec2
+import com.mc.engine.render.Pivot
+import com.mc.engine.render.Renderer
 import com.mc.gameengine.game.instance.BallLauncher
 import com.mc.gameengine.game.instance.StackBlock
 import com.mc.gameengine.game.instance.spec.BlockSpec

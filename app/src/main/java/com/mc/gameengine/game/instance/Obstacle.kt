@@ -1,14 +1,14 @@
 package com.mc.gameengine.game.instance
 
-import com.mc.gameengine.engine.collision.CollisionLayers
-import com.mc.gameengine.engine.compose.RenderDepth
-import com.mc.gameengine.engine.core.Instance
-import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.math.div
-import com.mc.gameengine.engine.physics.SensorCollider
-import com.mc.gameengine.engine.physics.Shape
-import com.mc.gameengine.engine.render.Renderer
+import com.mc.engine.compose.RenderDepth
+import com.mc.engine.core.Instance
+import com.mc.engine.core.TransformState
+import com.mc.engine.math.Vec2
+import com.mc.engine.math.div
+import com.mc.engine.physics.CollisionLayers
+import com.mc.engine.physics.SensorCollider
+import com.mc.engine.physics.Shape
+import com.mc.engine.render.Renderer
 
 class Obstacle : Instance() {
 

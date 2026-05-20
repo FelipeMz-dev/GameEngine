@@ -1,18 +1,18 @@
 package com.mc.gameengine.game.instance
 
 import androidx.compose.ui.graphics.Color
-import com.mc.gameengine.engine.core.Instance
-import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.input.sensor.SensorEvent
-import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.math.clamp
-import com.mc.gameengine.engine.math.div
-import com.mc.gameengine.engine.math.minus
-import com.mc.gameengine.engine.math.plus
-import com.mc.gameengine.engine.math.times
-import com.mc.gameengine.engine.input.sensor.SensorListener
-import com.mc.gameengine.engine.render.Pivot
-import com.mc.gameengine.engine.render.Renderer
+import com.mc.engine.core.Instance
+import com.mc.engine.core.TransformState
+import com.mc.engine.input.sensor.SensorEvent
+import com.mc.engine.input.sensor.SensorListener
+import com.mc.engine.math.Vec2
+import com.mc.engine.math.clamp
+import com.mc.engine.math.div
+import com.mc.engine.math.minus
+import com.mc.engine.math.plus
+import com.mc.engine.math.times
+import com.mc.engine.render.Pivot
+import com.mc.engine.render.Renderer
 
 class MovingSphere : Instance(), SensorListener {
 

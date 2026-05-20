@@ -1,14 +1,14 @@
 package com.mc.gameengine.game.instance
 
 import androidx.compose.ui.graphics.Color
-import com.mc.gameengine.engine.collision.CollisionBodyType
-import com.mc.gameengine.engine.collision.PhysicsMaterial
-import com.mc.gameengine.engine.core.Instance
-import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.physics.RigidBody
-import com.mc.gameengine.engine.physics.Shape
-import com.mc.gameengine.engine.render.Renderer
+import com.mc.engine.core.Instance
+import com.mc.engine.core.TransformState
+import com.mc.engine.math.Vec2
+import com.mc.engine.physics.CollisionBodyType
+import com.mc.engine.physics.PhysicsMaterial
+import com.mc.engine.physics.RigidBody
+import com.mc.engine.physics.Shape
+import com.mc.engine.render.Renderer
 
 class StackBlock(
     private val start: Vec2,

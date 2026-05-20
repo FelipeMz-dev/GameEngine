@@ -21,3 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "GameEngine"
 include(":app")
+include(":engine-core")
+include(":engine-android")
+include(":engine-desktop")

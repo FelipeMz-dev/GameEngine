@@ -1,0 +1,6 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="engine-core-desktop-1.0.0-alpha">
+    <output-path>$PROJECT_DIR$/engine-core/build/libs</output-path>
+    <root id="archive" name="engine-core-desktop-1.0.0-alpha.jar" />
+  </artifact>
+</component>

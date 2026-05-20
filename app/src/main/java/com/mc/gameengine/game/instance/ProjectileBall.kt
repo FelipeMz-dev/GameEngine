@@ -1,13 +1,15 @@
 package com.mc.gameengine.game.instance
 
-import com.mc.gameengine.engine.collision.CollisionBodyType
-import com.mc.gameengine.engine.collision.PhysicsMaterial
-import com.mc.gameengine.engine.core.Instance
-import com.mc.gameengine.engine.core.TransformState
-import com.mc.gameengine.engine.math.Vec2
-import com.mc.gameengine.engine.physics.RigidBody
-import com.mc.gameengine.engine.physics.Shape
-import com.mc.gameengine.engine.render.Renderer
+import com.mc.engine.core.Instance
+import com.mc.engine.core.TransformState
+import com.mc.engine.math.Vec2
+import com.mc.engine.physics.CollisionEvent
+import com.mc.engine.physics.CollisionListener
+import com.mc.engine.physics.CollisionPhase
+import com.mc.engine.physics.PhysicsMaterial
+import com.mc.engine.physics.RigidBody
+import com.mc.engine.physics.Shape
+import com.mc.engine.render.Renderer
 import com.mc.gameengine.game.instance.spec.BallSpec
 
 class ProjectileBall(
@@ -15,7 +17,7 @@ class ProjectileBall(
     private val target: Vec2,
     private val velocity: Float,
     private val spec: BallSpec,
-) : Instance() {
+) : Instance(), CollisionListener {
 
     private var livedSeconds = 0f
     private lateinit var ball: RigidBody
@@ -24,7 +26,6 @@ class ProjectileBall(
         ball = createRigidBody(
             shape = Shape.CircleShape(spec.radius),
             state = TransformState(position = start),
-            type = CollisionBodyType.Dynamic,
             material = PhysicsMaterial(
                 density = spec.density,
                 friction = 0.4f,
@@ -60,5 +61,9 @@ class ProjectileBall(
             state = ball.transformState,
             color = spec.color
         )
+    }
+
+    override fun onCollision(event: CollisionEvent) {
+        if (event.phase == CollisionPhase.Enter) println(event.details)
     }
 }
