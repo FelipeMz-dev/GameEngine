@@ -4,9 +4,13 @@ plugins {
     id("maven-publish")
 }
 
+group = "com.mc.engine"
+version = "1.0.0-alpha"
+
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+    withSourcesJar()
 }
 
 kotlin {
@@ -17,4 +21,16 @@ kotlin {
 
 dependencies {
     implementation(project(":engine-core"))
+}
+
+
+publishing {
+    publications {
+        register<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = "com.mc.engine"
+            artifactId = "gameengine-desktop"
+            version = "1.0.0-alpha"
+        }
+    }
 }

@@ -4,6 +4,9 @@ plugins {
     id("maven-publish")
 }
 
+group = "com.mc.engine"
+version = "1.0.0-alpha"
+
 android {
     namespace = "com.mc.engine.android"
     compileSdk = 35
@@ -34,4 +37,18 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.material3)
+}
+
+
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            afterEvaluate {
+                from(components["release"])
+            }
+            groupId = "com.mc.engine"
+            artifactId = "gameengine-android"
+            version = "1.0.0-alpha"
+        }
+    }
 }
