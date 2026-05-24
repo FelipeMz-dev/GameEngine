@@ -1,13 +1,22 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.library)
     id("maven-publish")
 }
 
-version = "1.0.0-alpha"
 group = "com.mc.engine"
+version = "1.0.0-alpha"
 
 kotlin {
-    // JVM/Desktop target
+    androidTarget {
+        compilations.all {
+            compilerOptions.configure {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            }
+        }
+        publishLibraryVariants("release")
+    }
+
     jvm("desktop") {
         compilations.all {
             compilerOptions.configure {
@@ -20,9 +29,17 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.dyn4j)
         }
-        
-               
-        
+
+        val androidMain by getting {
+            dependencies {
+                implementation(platform(libs.androidx.compose.bom))
+                implementation(libs.androidx.ui)
+                implementation(libs.androidx.ui.graphics)
+                implementation(libs.androidx.compose.foundation)
+                implementation(libs.androidx.activity.compose)
+            }
+        }
+
         val desktopMain by getting {
             dependencies {
                 implementation(libs.androidx.compose.ui.jvmstubs)
@@ -32,15 +49,16 @@ kotlin {
     }
 }
 
-publishing {
-    publications {
-        register<MavenPublication>("release") {
-            groupId = "com.mc.engine"
-            artifactId = "gameengine-core"
-            version = "1.0.0-alpha"
-        }
+android {
+    namespace = "com.mc.engine.core"
+    compileSdk = 36
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
-
-
-
